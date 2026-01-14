@@ -1,0 +1,34 @@
+root = true
+
+[*]
+insert_final_newline = true
+charset = utf-8
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[{Makefile,*.go,.gitmodules}]
+indent_style = tab
+indent_size = 4
+
+[go.{mod,work,work.sum,sum}]
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+indent_style = unset
+indent_size = unset
+
+[*.{ts,tsx}]
+indent_style = space
+indent_size = 2
+quote_type = single
+
+[*.{scss,json}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+indent_size = 4
+trim_trailing_whitespace = false
+
