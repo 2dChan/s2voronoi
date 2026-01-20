@@ -1,0 +1,99 @@
+// Copyright (c) 2026 Andrey Kriulin
+// Licensed under the MIT License.
+// See the LICENSE file in the project root for full license text.
+
+package main
+
+import (
+	"os"
+
+	"github.com/2dChan/s2voronoi/s2delaunay"
+	"github.com/2dChan/s2voronoi/utils"
+	svg "github.com/ajstarks/svgo"
+	"github.com/golang/geo/s2"
+)
+
+const (
+	filename = "delaunay.svg"
+
+	// PlateCarreeProjection
+	width  = 500
+	height = width / 2
+
+	style     = "fill:rgb(255,255,255);stroke:rgb(170,170,170);stroke-width:1;stroke-opacity:1.0"
+	siteStyle = "fill:rgb(0,0,255)"
+)
+
+func Abs(a int) int {
+	if a > 0 {
+		return a
+	}
+	return -a
+}
+
+func PointToScreen(p s2.Point) (int, int) {
+	xScale := float64(width)
+	proj := s2.NewPlateCarreeProjection(xScale)
+
+	r2p := proj.Project(p)
+
+	x := (r2p.X + xScale) / (2 * xScale)
+	y := (-r2p.Y + xScale/2) / xScale
+
+	return int(x * width), int(y * height)
+}
+
+func renderDelaunayTriangulation(dt *s2delaunay.DelaunayTriangulation) {
+	file, err := os.Create(filename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		err := file.Close()
+		if err != nil {
+			panic(err)
+		}
+	}()
+
+	canvas := svg.New(file)
+	canvas.Start(width, height)
+	canvas.Rect(0, 0, width, height, "fill:rgb(255,255,255)")
+
+	for _, t := range dt.Triangles {
+		pointsCnt := len(t.V)
+		xPoints := make([]int, pointsCnt)
+		yPoints := make([]int, pointsCnt)
+
+		draw := true
+		x0, _ := PointToScreen(dt.Vertices[t.V[0]])
+		for i, id := range t.V {
+			xPoints[i], yPoints[i] = PointToScreen(dt.Vertices[id])
+
+			if Abs(x0-xPoints[i]) > width/2 {
+				draw = false
+				break
+			}
+		}
+
+		// Skip drawing boundary polygons
+		if draw {
+			canvas.Polygon(xPoints, yPoints, style)
+		}
+	}
+
+	for _, p := range dt.Vertices {
+		x, y := PointToScreen(p)
+		canvas.Circle(x, y, 3, siteStyle)
+	}
+	canvas.End()
+}
+
+func main() {
+	points := utils.GenerateRandomPoints(100, 0)
+	dt, err := s2delaunay.ComputeDelaunayTriangulation(points, 0)
+	if err != nil {
+		panic(err)
+	}
+
+	renderDelaunayTriangulation(dt)
+}
