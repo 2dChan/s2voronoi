@@ -13,6 +13,7 @@ import (
 )
 
 func GenerateRandomPoints(cnt int, seed int64) s2.PointVector {
+	//nolint:gosec
 	random := rand.New(rand.NewSource(seed))
 	sites := make(s2.PointVector, cnt)
 
