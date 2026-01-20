@@ -71,14 +71,16 @@ func (dt *DelaunayTriangulation) TriangleVertices(tIdx int) ([3]s2.Point, error)
 }
 
 // NOTE: All vertices must lie on a sphere.
-func ComputeDelaunayTriangulation(vertices s2.PointVector, eps float64) (*DelaunayTriangulation, error) {
+func ComputeDelaunayTriangulation(vertices s2.PointVector, eps float64) (*DelaunayTriangulation,
+	error) {
 	if eps == 0 {
 		eps = defaultEps
 	}
 
 	numVertices := len(vertices)
 	if numVertices < 4 {
-		return nil, errors.New("s2delaunay: insufficient vertices for triangulation (minimum 4 required)")
+		return nil,
+			errors.New("s2delaunay: insufficient vertices for triangulation (minimum 4 required)")
 	}
 	numTriangles := 2 * (numVertices - 2)
 	dt := &DelaunayTriangulation{
