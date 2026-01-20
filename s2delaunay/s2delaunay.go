@@ -53,13 +53,21 @@ type DelaunayTriangulation struct {
 	IncidentTriangleOffsets []int
 }
 
-func (dt *DelaunayTriangulation) IncidentTriangles(vIdx int) []int {
-	return dt.IncidentTriangleIndices[dt.IncidentTriangleOffsets[vIdx]:dt.IncidentTriangleOffsets[vIdx+1]]
+func (dt *DelaunayTriangulation) IncidentTriangles(vIdx int) ([]int, error) {
+	if vIdx < 0 || vIdx+1 >= len(dt.IncidentTriangleOffsets) {
+		return nil, errors.New("IncidentTriangles: vIdx out of range")
+	}
+	start := dt.IncidentTriangleOffsets[vIdx]
+	end := dt.IncidentTriangleOffsets[vIdx+1]
+	return dt.IncidentTriangleIndices[start:end], nil
 }
 
-func (dt *DelaunayTriangulation) TriangleVertices(tIdx int) (s2.Point, s2.Point, s2.Point) {
+func (dt *DelaunayTriangulation) TriangleVertices(tIdx int) ([3]s2.Point, error) {
+	if tIdx < 0 || tIdx >= len(dt.Triangles) {
+		return [3]s2.Point{}, errors.New("TriangleVertices: tIdx %d out of bounds")
+	}
 	t := dt.Triangles[tIdx]
-	return dt.Vertices[t.V[0]], dt.Vertices[t.V[1]], dt.Vertices[t.V[2]]
+	return [3]s2.Point{dt.Vertices[t.V[0]], dt.Vertices[t.V[1]], dt.Vertices[t.V[2]]}, nil
 }
 
 // NOTE: All vertices must lie on a sphere.
@@ -111,7 +119,10 @@ func ComputeDelaunayTriangulation(vertices s2.PointVector, eps float64) (*Delaun
 	}
 
 	for i := range numVertices {
-		incidentTriangles := dt.IncidentTriangles(i)
+		incidentTriangles, err := dt.IncidentTriangles(i)
+		if err != nil {
+			return nil, err
+		}
 		sortIncidentTriangleIndicesCCW(i, incidentTriangles, dt.Triangles)
 	}
 
