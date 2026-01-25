@@ -30,7 +30,7 @@ func (t *Triangle) PrevVertex(vIdx int) int {
 	case t.V[2]:
 		return t.V[1]
 	}
-	return -1
+	panic("PrevVertex: vIdx not in triangle")
 }
 
 func (t *Triangle) NextVertex(vIdx int) int {
@@ -42,7 +42,7 @@ func (t *Triangle) NextVertex(vIdx int) int {
 	case t.V[2]:
 		return t.V[0]
 	}
-	return -1
+	panic("NextVertex: vIdx not in triangle")
 }
 
 type DelaunayTriangulation struct {

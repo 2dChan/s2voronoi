@@ -28,10 +28,16 @@ func TestTrianglePrevVertex(t *testing.T) {
 			t.Errorf("tri.PrevVertex(%v) = %v, want %v", in, got, want)
 		}
 	}
+}
 
-	if got := tri.PrevVertex(-1); got != -1 {
-		t.Errorf("tri.PrevVertex(-1) = %v, want -1", got)
-	}
+func TestTrianglePrevVertex_Panic(t *testing.T) {
+	tri := Triangle{V: [3]int{1, 2, 3}}
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("PrevVertex should panic for vIdx not in triangle")
+		}
+	}()
+	tri.PrevVertex(-1)
 }
 
 func TestTriangleNextVertex(t *testing.T) {
@@ -44,10 +50,16 @@ func TestTriangleNextVertex(t *testing.T) {
 			t.Errorf("tri.NextVertex(%v) = %v, want %v", in, got, want)
 		}
 	}
+}
 
-	if got := tri.NextVertex(-1); got != -1 {
-		t.Errorf("tri.NextVertex(-1) = %v, want -1", got)
-	}
+func TestTriangleNextVertex_Panic(t *testing.T) {
+	tri := Triangle{V: [3]int{1, 2, 3}}
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("PrevVertex should panic for vIdx not in triangle")
+		}
+	}()
+	tri.NextVertex(-1)
 }
 
 // DelaunayTriangulation
