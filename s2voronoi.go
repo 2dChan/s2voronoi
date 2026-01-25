@@ -90,7 +90,12 @@ func (c Cell) VertexIndices() []int {
 }
 
 func (c Cell) Vertex(i int) s2.Point {
-	return c.vd.Vertices[c.vd.CellVertices[c.vd.CellOffsets[c.idx]+i]]
+	start := c.vd.CellOffsets[c.idx]
+	end := c.vd.CellOffsets[c.idx+1]
+	if i < 0 || i > end-start {
+		panic("Vertex: index out of range")
+	}
+	return c.vd.Vertices[c.vd.CellVertices[start+i]]
 }
 
 func (c Cell) NumNeighbors() int {
@@ -102,7 +107,12 @@ func (c Cell) NeighborIndices() []int {
 }
 
 func (c Cell) Neighbor(i int) Cell {
-	return c.vd.Cell(c.vd.CellNeighbors[c.vd.CellOffsets[c.idx]+i])
+	start := c.vd.CellOffsets[c.idx]
+	end := c.vd.CellOffsets[c.idx+1]
+	if i < 0 || i > end-start {
+		panic("Neighbor: index out of range")
+	}
+	return c.vd.Cell(c.vd.CellNeighbors[start+i])
 }
 
 func triangleCircumcenter(p1, p2, p3 s2.Point) s2.Point {
