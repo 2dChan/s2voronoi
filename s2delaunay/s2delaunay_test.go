@@ -110,32 +110,49 @@ func TestIncidentTriangles(t *testing.T) {
 	}
 
 	tests := []struct {
-		name    string
-		in      int
-		want    []int
-		wantErr bool
+		name string
+		in   int
+		want []int
 	}{
-		{"negative", -1, nil, true},
-		{"out of range", len(dt.IncidentTriangleOffsets), nil, true},
-		{"index 0", 0, []int{0, 1}, false},
-		{"index 1", 1, []int{1}, false},
-		{"index 2", 2, []int{1, 2}, false},
+		{"index 0", 0, []int{0, 1}},
+		{"index 1", 1, []int{1}},
+		{"index 2", 2, []int{1, 2}},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := dt.IncidentTriangles(tt.in)
-			if tt.wantErr && err == nil {
-				t.Errorf("dt.IncidentTriangles(%d) error = nil, want non-nil", tt.in)
-			}
-			if tt.wantErr == false && err != nil {
-				t.Errorf("dt.IncidentTriangles(%d) error = %v, want nil", tt.in, err)
-			}
-			if tt.wantErr == false && err == nil && cmp.Equal(tt.want, got) == false {
+			got := dt.IncidentTriangles(tt.in)
+			if cmp.Equal(tt.want, got) == false {
 				t.Errorf("dt.IncidentTriangles(%d) = %v, want %v", tt.in, got, tt.want)
 			}
 		})
 	}
+}
+func TestIncidentTriangles_Panic(t *testing.T) {
+	dt := &DelaunayTriangulation{
+		Vertices:                nil,
+		Triangles:               nil,
+		IncidentTriangleIndices: []int{0, 1, 1, 1, 2},
+		IncidentTriangleOffsets: []int{0, 2, 3, 5},
+	}
+
+	checkPanic := func(idx int) {
+		panicked := false
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					panicked = true
+				}
+			}()
+			_ = dt.IncidentTriangles(idx)
+		}()
+		if panicked == false {
+			t.Errorf("dt.IncidentTriangles(%d) did not panic, want panic", idx)
+		}
+	}
+
+	checkPanic(-1)
+	checkPanic(len(dt.IncidentTriangleOffsets))
 }
 
 func TestTriangleVertices(t *testing.T) {
@@ -148,18 +165,38 @@ func TestTriangleVertices(t *testing.T) {
 	}
 
 	want := [3]s2.Point{points[0], points[1], points[2]}
-	if got, err := dt.TriangleVertices(0); err != nil {
-		t.Errorf("dt.TriangleVertices(0) error = %v, want nil", err)
-	} else if diff := cmp.Diff(want, got); diff != "" {
+	got := dt.TriangleVertices(0)
+	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("dt.TriangleVertices(0) mismatch (-want +got):\n%v", diff)
 	}
+}
 
-	if _, err := dt.TriangleVertices(1); err == nil {
-		t.Error("dt.TriangleVertices(1) error = got nil, want non-nil")
+func TestTriangleVertices_Panic(t *testing.T) {
+	points := utils.GenerateRandomPoints(3, 0)
+	dt := &DelaunayTriangulation{
+		Vertices: s2.PointVector{points[0], points[1], points[2]},
+		Triangles: []Triangle{
+			{V: [3]int{0, 1, 2}},
+		},
 	}
-	if _, err := dt.TriangleVertices(-1); err == nil {
-		t.Error("dt.TriangleVertices(-1) error = got nil, want non-nil")
+
+	checkPanic := func(idx int) {
+		panicked := false
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					panicked = true
+				}
+			}()
+			_ = dt.TriangleVertices(idx)
+		}()
+		if panicked == false {
+			t.Errorf("dt.TriangleVertices(%d) did not panic, want panic", idx)
+		}
 	}
+
+	checkPanic(1)
+	checkPanic(-1)
 }
 
 func TestComputeDelaunayTriangulation_DegenerateInput(t *testing.T) {
@@ -204,10 +241,7 @@ func TestComputeDelaunayTriangulation_VerifyIncidentTrianglesSorted(t *testing.T
 	dt := mustComputeDelaunayTriangulation(t, 100)
 
 	for vIdx := range len(dt.Vertices) {
-		incidentTris, err := dt.IncidentTriangles(vIdx)
-		if err != nil {
-			t.Fatalf("dt.IncidentTriangles(%v) error = %v", vIdx, err)
-		}
+		incidentTris := dt.IncidentTriangles(vIdx)
 		for i := 1; i < len(incidentTris); i++ {
 			ct := dt.Triangles[incidentTris[i-1]]
 			nt := dt.Triangles[incidentTris[i]]
