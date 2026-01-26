@@ -91,7 +91,7 @@ func renderDelaunayTriangulation(dt *s2delaunay.DelaunayTriangulation) {
 
 func main() {
 	points := utils.GenerateRandomPoints(100, 0)
-	dt, err := s2delaunay.ComputeDelaunayTriangulation(points, 0)
+	dt, err := s2delaunay.ComputeDelaunayTriangulation(points)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

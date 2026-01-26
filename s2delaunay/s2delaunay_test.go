@@ -16,6 +16,35 @@ import (
 	"github.com/markus-wa/quickhull-go/v2"
 )
 
+// DelaunayTriangulationOptions
+
+func TestWithEps(t *testing.T) {
+	const (
+		eps = 0.5
+	)
+
+	opts := &DelaunayTriangulationOptions{Eps: 0}
+	opt := WithEps(eps)
+	opt(opts)
+	if opts.Eps != eps {
+		t.Errorf("WithEps(%v): opts.Eps = %v, want %v", eps, opts.Eps, eps)
+	}
+}
+
+func TestWithEps_Panic(t *testing.T) {
+	invalidEps := []float64{-1.0, -0.1, 0.0}
+	for _, eps := range invalidEps {
+		t.Run(fmt.Sprintf("eps %v", eps), func(t *testing.T) {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Errorf("WithEps(%v): shoud panic for eps<=0", eps)
+				}
+			}()
+			WithEps(eps)
+		})
+	}
+}
+
 // Triangle
 
 func TestTrianglePrevVertex(t *testing.T) {
@@ -92,7 +121,7 @@ func BenchmarkComputeDelaunayTriangulation(b *testing.B) {
 
 			b.ResetTimer()
 			for b.Loop() {
-				_, err := ComputeDelaunayTriangulation(points, 0)
+				_, err := ComputeDelaunayTriangulation(points)
 				if err != nil {
 					b.Fatalf("ComputeDelaunayTriangulation(...) error = %v, want nil", err)
 				}
@@ -199,13 +228,22 @@ func TestTriangleVertices_Panic(t *testing.T) {
 	checkPanic(-1)
 }
 
+func TestComputeDelaunayTriangulation_WithEps(t *testing.T) {
+	vertices := utils.GenerateRandomPoints(10, 0)
+	customEps := 0.01
+	_, err := ComputeDelaunayTriangulation(vertices, WithEps(customEps))
+	if err != nil {
+		t.Fatalf("ComputeDelaunayTriangulation failed: %v", err)
+	}
+}
+
 func TestComputeDelaunayTriangulation_DegenerateInput(t *testing.T) {
 	vertices := s2.PointVector{
 		s2.PointFromCoords(1, 0, 0),
 		s2.PointFromCoords(0, 1, 0),
 		s2.PointFromCoords(0, 0, 1),
 	}
-	if _, err := ComputeDelaunayTriangulation(vertices, 0); err == nil {
+	if _, err := ComputeDelaunayTriangulation(vertices); err == nil {
 		t.Errorf("ComputeDelaunayTriangulation(...) error = nil, want non-nil")
 	}
 }
@@ -335,7 +373,7 @@ func mustComputeDelaunayTriangulation(t *testing.T, n int) *DelaunayTriangulatio
 	t.Helper()
 	vertices := utils.GenerateRandomPoints(n, 0)
 
-	dt, err := ComputeDelaunayTriangulation(vertices, 0)
+	dt, err := ComputeDelaunayTriangulation(vertices)
 	if err != nil {
 		t.Fatalf("ComputeDelaunayTriangulation(...) error = %v, want nil", err)
 	}

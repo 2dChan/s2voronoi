@@ -37,7 +37,7 @@ func ComputeVoronoiDiagram(sites s2.PointVector, eps float64) (*VoronoiDiagram, 
 		eps = defaultEps
 	}
 
-	dt, err := s2delaunay.ComputeDelaunayTriangulation(sites, eps)
+	dt, err := s2delaunay.ComputeDelaunayTriangulation(sites, s2delaunay.WithEps(eps))
 	if err != nil {
 		return nil, err
 	}

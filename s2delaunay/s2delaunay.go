@@ -70,11 +70,29 @@ func (dt *DelaunayTriangulation) TriangleVertices(tIdx int) [3]s2.Point {
 	return [3]s2.Point{dt.Vertices[t.V[0]], dt.Vertices[t.V[1]], dt.Vertices[t.V[2]]}
 }
 
+type DelaunayTriangulationOptions struct {
+	Eps float64
+}
+
+type DelaunayTriangulationOption func(*DelaunayTriangulationOptions)
+
+func WithEps(eps float64) DelaunayTriangulationOption {
+	if eps <= 0 {
+		panic("WithEps: eps must be non-negative")
+	}
+
+	return func(o *DelaunayTriangulationOptions) {
+		o.Eps = eps
+	}
+}
+
 // NOTE: All vertices must lie on a sphere.
-func ComputeDelaunayTriangulation(vertices s2.PointVector, eps float64) (*DelaunayTriangulation,
-	error) {
-	if eps == 0 {
-		eps = defaultEps
+func ComputeDelaunayTriangulation(vertices s2.PointVector, setters ...DelaunayTriangulationOption) (*DelaunayTriangulation, error) {
+	opts := DelaunayTriangulationOptions{
+		Eps: defaultEps,
+	}
+	for _, set := range setters {
+		set(&opts)
 	}
 
 	numVertices := len(vertices)
@@ -95,7 +113,7 @@ func ComputeDelaunayTriangulation(vertices s2.PointVector, eps float64) (*Delaun
 		r3vertices[i] = p.Vector
 	}
 	qh := new(quickhull.QuickHull)
-	ch := qh.ConvexHull(r3vertices, true, true, eps)
+	ch := qh.ConvexHull(r3vertices, true, true, opts.Eps)
 	if len(ch.Indices) != numTriangles*3 {
 		return nil, errors.New("s2delaunay: inconsistent number of indices returned from QuickHull")
 	}
