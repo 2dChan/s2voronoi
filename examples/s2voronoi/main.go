@@ -61,7 +61,11 @@ func renderDiagram(vd *s2voronoi.Diagram) {
 	canvas.Rect(0, 0, width, height, "fill:rgb(255,255,255)")
 
 	for i := range vd.NumCells() {
-		cell := vd.Cell(i)
+		cell, err := vd.Cell(i)
+		if err != nil {
+			log.Printf("error getting cell %d: %v", i, err)
+			continue
+		}
 
 		numPoints := cell.NumVertices()
 		xPoints := make([]int, numPoints)
@@ -96,7 +100,11 @@ func renderDiagram(vd *s2voronoi.Diagram) {
 	}
 
 	for i := range vd.NumCells() {
-		cell := vd.Cell(i)
+		cell, err := vd.Cell(i)
+		if err != nil {
+			log.Printf("error getting cell %d: %v", i, err)
+			continue
+		}
 		site := cell.Site()
 		sx, sy := PointToScreen(site)
 		canvas.Circle(sx, sy, 3, siteStyle)

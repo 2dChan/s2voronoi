@@ -130,7 +130,10 @@ func TestNewDiagram_VerifyCCW(t *testing.T) {
 	vd := mustNewDiagram(t, 100)
 
 	for i := range vd.NumCells() {
-		cell := vd.Cell(i)
+		cell, err := vd.Cell(i)
+		if err != nil {
+			t.Fatalf("vd.Cell(%d) error = %v, want nil", i, err)
+		}
 
 		center := cell.Site()
 		for i := 0; i < cell.NumVertices(); i++ {

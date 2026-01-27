@@ -99,8 +99,12 @@ func (d *Diagram) NumCells() int {
 	return len(d.Sites)
 }
 
-func (d *Diagram) Cell(i int) Cell {
-	return Cell{idx: i, d: d}
+func (d *Diagram) Cell(i int) (Cell, error) {
+	if i < 0 || i >= len(d.Sites) {
+		return Cell{}, fmt.Errorf("Cell: index %d out of range [0, %d)", i, len(d.Sites))
+	}
+
+	return Cell{idx: i, d: d}, nil
 }
 
 func triangleCircumcenter(p1, p2, p3 s2.Point) s2.Point {

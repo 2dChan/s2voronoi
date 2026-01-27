@@ -50,5 +50,9 @@ func (c Cell) Neighbor(i int) (Cell, error) {
 	if i < 0 || i >= end-start {
 		return Cell{}, fmt.Errorf("Neighbor: index %d out of range [0 %d)", i, end-start)
 	}
-	return c.d.Cell(c.d.CellNeighbors[start+i]), nil
+	nc, err := c.d.Cell(c.d.CellNeighbors[start+i])
+	if err != nil {
+		return Cell{}, err
+	}
+	return nc, nil
 }
