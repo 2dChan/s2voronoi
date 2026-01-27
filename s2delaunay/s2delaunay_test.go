@@ -45,50 +45,6 @@ func TestWithEps_Panic(t *testing.T) {
 	}
 }
 
-// Triangle
-
-func TestTrianglePrevVertex(t *testing.T) {
-	tri := [3]int{1, 2, 3}
-	for i, in := range tri {
-		got := PrevVertex(tri, in)
-		want := tri[(i+2)%len(tri)]
-		if got != want {
-			t.Errorf("tri.PrevVertex(%v) = %v, want %v", in, got, want)
-		}
-	}
-}
-
-func TestTrianglePrevVertex_Panic(t *testing.T) {
-	tri := [3]int{1, 2, 3}
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("PrevVertex should panic for vIdx not in triangle")
-		}
-	}()
-	PrevVertex(tri, -1)
-}
-
-func TestTriangleNextVertex(t *testing.T) {
-	tri := [3]int{1, 2, 3}
-	for i, in := range tri {
-		got := NextVertex(tri, in)
-		want := tri[(i+1)%len(tri)]
-		if got != want {
-			t.Errorf("tri.NextVertex(%v) = %v, want %v", in, got, want)
-		}
-	}
-}
-
-func TestTriangleNextVertex_Panic(t *testing.T) {
-	tri := [3]int{1, 2, 3}
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("PrevVertex should panic for vIdx not in triangle")
-		}
-	}()
-	NextVertex(tri, -1)
-}
-
 // Triangulation
 
 func BenchmarkConvexHull(b *testing.B) {
@@ -377,4 +333,46 @@ func mustNewTriangulation(t *testing.T, n int) *Triangulation {
 		t.Fatalf("NewTriangulation(...) error = %v, want nil", err)
 	}
 	return dt
+}
+
+func TestTrianglePrevVertex(t *testing.T) {
+	tri := [3]int{1, 2, 3}
+	for i, in := range tri {
+		got := PrevVertex(tri, in)
+		want := tri[(i+2)%len(tri)]
+		if got != want {
+			t.Errorf("tri.PrevVertex(%v) = %v, want %v", in, got, want)
+		}
+	}
+}
+
+func TestTrianglePrevVertex_Panic(t *testing.T) {
+	tri := [3]int{1, 2, 3}
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("PrevVertex should panic for vIdx not in triangle")
+		}
+	}()
+	PrevVertex(tri, -1)
+}
+
+func TestTriangleNextVertex(t *testing.T) {
+	tri := [3]int{1, 2, 3}
+	for i, in := range tri {
+		got := NextVertex(tri, in)
+		want := tri[(i+1)%len(tri)]
+		if got != want {
+			t.Errorf("tri.NextVertex(%v) = %v, want %v", in, got, want)
+		}
+	}
+}
+
+func TestTriangleNextVertex_Panic(t *testing.T) {
+	tri := [3]int{1, 2, 3}
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("PrevVertex should panic for vIdx not in triangle")
+		}
+	}()
+	NextVertex(tri, -1)
 }
