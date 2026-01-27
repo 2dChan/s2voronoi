@@ -94,7 +94,7 @@ func renderDiagram(vd *s2voronoi.Diagram) {
 
 func main() {
 	points := utils.GenerateRandomPoints(1000, 0)
-	vd, err := s2voronoi.NewDiagram(points, 0)
+	vd, err := s2voronoi.NewDiagram(points)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

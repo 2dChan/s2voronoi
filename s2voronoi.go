@@ -24,12 +24,30 @@ type Diagram struct {
 	CellOffsets   []int
 }
 
-func NewDiagram(sites s2.PointVector, eps float64) (*Diagram, error) {
-	if eps == 0 {
-		eps = defaultEps
+type DiagramOptions struct {
+	Eps float64
+}
+
+type DiagramOption func(*DiagramOptions)
+
+func WithEps(eps float64) DiagramOption {
+	if eps <= 0 {
+		panic("WithEps: eps must be non-negative")
+	}
+	return func(o *DiagramOptions) {
+		o.Eps = eps
+	}
+}
+
+func NewDiagram(sites s2.PointVector, setters ...DiagramOption) (*Diagram, error) {
+	opts := DiagramOptions{
+		Eps: defaultEps,
+	}
+	for _, set := range setters {
+		set(&opts)
 	}
 
-	dt, err := s2delaunay.NewTriangulation(sites, s2delaunay.WithEps(eps))
+	dt, err := s2delaunay.NewTriangulation(sites, s2delaunay.WithEps(opts.Eps))
 	if err != nil {
 		return nil, err
 	}

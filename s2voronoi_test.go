@@ -13,7 +13,47 @@ import (
 	"github.com/golang/geo/s2"
 )
 
+// DiagramOptions
+
+func TestWithEps(t *testing.T) {
+	const (
+		eps = 0.5
+	)
+
+	opts := &DiagramOptions{Eps: 0}
+	opt := WithEps(eps)
+	opt(opts)
+	if opts.Eps != eps {
+		t.Errorf("WithEps(%v): opts.Eps = %v, want %v", eps, opts.Eps, eps)
+	}
+}
+
+func TestWithEps_Panic(t *testing.T) {
+	invalidEps := []float64{-1.0, -0.1, 0.0}
+	for _, eps := range invalidEps {
+		t.Run(fmt.Sprintf("eps %v", eps), func(t *testing.T) {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Errorf("WithEps(%v): shoud panic for eps<=0", eps)
+				}
+			}()
+			WithEps(eps)
+		})
+	}
+}
+
 // Diagram
+
+func TestNewDiagram_WithEps(t *testing.T) {
+	const (
+		customEps = 0.01
+	)
+	vertices := utils.GenerateRandomPoints(10, 0)
+	_, err := NewDiagram(vertices, WithEps(customEps))
+	if err != nil {
+		t.Fatalf("NewDiagram(...): error = %v, want nil", err)
+	}
+}
 
 func TestDiagram_Invariants(t *testing.T) {
 	tests := []struct {
@@ -55,7 +95,7 @@ func TestDiagram_Invariants(t *testing.T) {
 func TestNewTriangulation_DegenerateInput(t *testing.T) {
 	// TODO: Add more tests for broken or invalid scenarios.
 	points := utils.GenerateRandomPoints(3, 0)
-	if _, err := NewDiagram(points, 0); err == nil {
+	if _, err := NewDiagram(points); err == nil {
 		t.Errorf("NewDelaunayTriangulation(...) error = nil, want non-nil")
 	}
 }
@@ -155,7 +195,7 @@ func BenchmarkNewDiagram(b *testing.B) {
 
 			b.ResetTimer()
 			for b.Loop() {
-				_, err := NewDiagram(points, 0)
+				_, err := NewDiagram(points)
 				if err != nil {
 					b.Fatalf("NewDiagram(...) error = %v, want nil", err)
 				}
@@ -169,7 +209,7 @@ func BenchmarkNewDiagram(b *testing.B) {
 func mustNewDiagram(t *testing.T, n int) *Diagram {
 	t.Helper()
 	points := utils.GenerateRandomPoints(n, 0)
-	vd, err := NewDiagram(points, 0)
+	vd, err := NewDiagram(points)
 	if err != nil {
 		t.Fatalf("NewDiagram(...) error = %v, want nil", err)
 	}
