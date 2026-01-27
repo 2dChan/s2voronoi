@@ -1,6 +1,10 @@
 package s2voronoi
 
-import "github.com/golang/geo/s2"
+import (
+	"fmt"
+
+	"github.com/golang/geo/s2"
+)
 
 type Cell struct {
 	idx int
@@ -27,7 +31,7 @@ func (c Cell) Vertex(i int) s2.Point {
 	start := c.d.CellOffsets[c.idx]
 	end := c.d.CellOffsets[c.idx+1]
 	if i < 0 || i > end-start {
-		panic("Vertex: index out of range")
+		panic(fmt.Sprintf("Vertex: index %d out of range [0 %d)", i, end-start))
 	}
 	return c.d.Vertices[c.d.CellVertices[start+i]]
 }
@@ -44,7 +48,7 @@ func (c Cell) Neighbor(i int) Cell {
 	start := c.d.CellOffsets[c.idx]
 	end := c.d.CellOffsets[c.idx+1]
 	if i < 0 || i > end-start {
-		panic("Neighbor: index out of range")
+		panic(fmt.Sprintf("Neighbor: index %d out of range [0 %d)", i, end-start))
 	}
 	return c.d.Cell(c.d.CellNeighbors[start+i])
 }

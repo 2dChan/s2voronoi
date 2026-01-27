@@ -5,6 +5,8 @@
 package s2voronoi
 
 import (
+	"fmt"
+
 	"github.com/2dChan/s2voronoi/s2delaunay"
 	"github.com/golang/geo/s2"
 )
@@ -32,7 +34,7 @@ type DiagramOption func(*DiagramOptions)
 
 func WithEps(eps float64) DiagramOption {
 	if eps <= 0 {
-		panic("WithEps: eps must be non-negative")
+		panic(fmt.Sprintf("WithEps: eps must be non-negative got %v", eps))
 	}
 	return func(o *DiagramOptions) {
 		o.Eps = eps

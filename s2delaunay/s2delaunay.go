@@ -6,6 +6,7 @@ package s2delaunay
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/golang/geo/r3"
 	"github.com/golang/geo/s2"
@@ -31,7 +32,7 @@ type TriangulationOption func(*TriangulationOptions)
 
 func WithEps(eps float64) TriangulationOption {
 	if eps <= 0 {
-		panic("WithEps: eps must be non-negative")
+		panic(fmt.Sprintf("WithEps: eps must be non-negative got %v", eps))
 	}
 	return func(o *TriangulationOptions) {
 		o.Eps = eps
@@ -48,7 +49,7 @@ func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (
 	}
 	numVertices := len(vertices)
 	if numVertices < 4 {
-		return nil, errors.New("s2delaunay: insufficient vertices for triangulation (minimum 4 required)")
+		return nil, errors.New("NewTriangulation: insufficient vertices for triangulation minimum 4 required")
 	}
 	numTriangles := 2 * (numVertices - 2)
 	t := &Triangulation{
@@ -64,7 +65,7 @@ func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (
 	qh := new(quickhull.QuickHull)
 	ch := qh.ConvexHull(r3vertices, true, true, opts.Eps)
 	if len(ch.Indices) != numTriangles*3 {
-		return nil, errors.New("s2delaunay: inconsistent number of indices returned from QuickHull")
+		return nil, errors.New("NewTriangulation: inconsistent number of indices returned from QuickHull")
 	}
 	for _, idx := range ch.Indices {
 		t.IncidentTriangleOffsets[idx+1]++
@@ -93,7 +94,7 @@ func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (
 
 func (t *Triangulation) IncidentTriangles(vIdx int) []int {
 	if vIdx < 0 || vIdx+1 >= len(t.IncidentTriangleOffsets) {
-		panic("IncidentTriangles: vIdx out of range")
+		panic(fmt.Sprintf("IncidentTriangles: vIdx %d out of range [0 %d)", vIdx, len(t.IncidentTriangleOffsets)-1))
 	}
 	start := t.IncidentTriangleOffsets[vIdx]
 	end := t.IncidentTriangleOffsets[vIdx+1]
@@ -102,7 +103,7 @@ func (t *Triangulation) IncidentTriangles(vIdx int) []int {
 
 func (t *Triangulation) TriangleVertices(tIdx int) (s2.Point, s2.Point, s2.Point) {
 	if tIdx < 0 || tIdx >= len(t.Triangles) {
-		panic("TriangleVertices: tIdx out of bounds")
+		panic(fmt.Sprintf("TriangleVertices: tIdx %d out of bounds [0 %d)", tIdx, len(t.Triangles)))
 	}
 	tri := t.Triangles[tIdx]
 	return t.Vertices[tri[0]], t.Vertices[tri[1]], t.Vertices[tri[2]]
@@ -139,7 +140,7 @@ func PrevVertex(t [3]int, vIdx int) int {
 	case t[2]:
 		return t[1]
 	}
-	panic("PrevVertex: vIdx not in triangle")
+	panic(fmt.Sprintf("PrevVertex: vIdx %d not in triangle", vIdx))
 }
 
 func NextVertex(t [3]int, vIdx int) int {
@@ -151,5 +152,5 @@ func NextVertex(t [3]int, vIdx int) int {
 	case t[2]:
 		return t[0]
 	}
-	panic("NextVertex: vIdx not in triangle")
+	panic(fmt.Sprintf("NextVertex: vIdx %d not in triangle", vIdx))
 }
