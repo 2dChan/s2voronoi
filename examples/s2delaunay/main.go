@@ -44,7 +44,7 @@ func PointToScreen(p s2.Point) (int, int) {
 	return int(x * width), int(y * height)
 }
 
-func renderDelaunayTriangulation(dt *s2delaunay.DelaunayTriangulation) {
+func renderTriangulation(dt *s2delaunay.Triangulation) {
 	file, err := os.Create(filename)
 	if err != nil {
 		panic(err)
@@ -91,11 +91,11 @@ func renderDelaunayTriangulation(dt *s2delaunay.DelaunayTriangulation) {
 
 func main() {
 	points := utils.GenerateRandomPoints(100, 0)
-	dt, err := s2delaunay.ComputeDelaunayTriangulation(points, s2delaunay.WithEps(0))
+	dt, err := s2delaunay.NewTriangulation(points)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 
-	renderDelaunayTriangulation(dt)
+	renderTriangulation(dt)
 }

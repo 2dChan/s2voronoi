@@ -13,7 +13,7 @@ const (
 	defaultEps = 1e-12
 )
 
-type VoronoiDiagram struct {
+type Diagram struct {
 	Sites    s2.PointVector
 	Vertices s2.PointVector
 
@@ -24,27 +24,27 @@ type VoronoiDiagram struct {
 	CellOffsets   []int
 }
 
-func (vd *VoronoiDiagram) NumCells() int {
+func (vd *Diagram) NumCells() int {
 	return len(vd.Sites)
 }
 
-func (vd *VoronoiDiagram) Cell(i int) Cell {
+func (vd *Diagram) Cell(i int) Cell {
 	return Cell{idx: i, vd: vd}
 }
 
-func ComputeVoronoiDiagram(sites s2.PointVector, eps float64) (*VoronoiDiagram, error) {
+func NewDiagram(sites s2.PointVector, eps float64) (*Diagram, error) {
 	if eps == 0 {
 		eps = defaultEps
 	}
 
-	dt, err := s2delaunay.ComputeDelaunayTriangulation(sites, s2delaunay.WithEps(eps))
+	dt, err := s2delaunay.NewTriangulation(sites, s2delaunay.WithEps(eps))
 	if err != nil {
 		return nil, err
 	}
 
 	numTriangles := len(dt.Triangles)
 	numNeighbors := len(dt.IncidentTriangleIndices)
-	vd := &VoronoiDiagram{
+	vd := &Diagram{
 		Sites:         dt.Vertices,
 		Vertices:      make(s2.PointVector, numTriangles),
 		CellVertices:  dt.IncidentTriangleIndices,
@@ -70,7 +70,7 @@ func ComputeVoronoiDiagram(sites s2.PointVector, eps float64) (*VoronoiDiagram, 
 
 type Cell struct {
 	idx int
-	vd  *VoronoiDiagram
+	vd  *Diagram
 }
 
 func (c Cell) SiteIndex() int {

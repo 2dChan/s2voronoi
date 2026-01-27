@@ -14,9 +14,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-// VoronoiDiagram
+// Diagram
 
-func BenchmarkComputeVoronoiDiagram(b *testing.B) {
+func BenchmarkNewDiagram(b *testing.B) {
 	sizes := []int{1e+2, 1e+3, 1e+4, 1e+5}
 	for _, pointsCnt := range sizes {
 		b.Run(fmt.Sprintf("N%d", pointsCnt), func(b *testing.B) {
@@ -24,16 +24,16 @@ func BenchmarkComputeVoronoiDiagram(b *testing.B) {
 
 			b.ResetTimer()
 			for b.Loop() {
-				_, err := ComputeVoronoiDiagram(points, 0)
+				_, err := NewDiagram(points, 0)
 				if err != nil {
-					b.Fatalf("ComputeVoronoiDiagram(...) error = %v, want nil", err)
+					b.Fatalf("NewDiagram(...) error = %v, want nil", err)
 				}
 			}
 		})
 	}
 }
 
-func TestVoronoiDiagram_Invariants(t *testing.T) {
+func TestDiagram_Invariants(t *testing.T) {
 	tests := []struct {
 		name string
 		size int
@@ -46,50 +46,50 @@ func TestVoronoiDiagram_Invariants(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			vd := mustComputeVoronoiDiagram(t, tt.size)
+			vd := mustNewDiagram(t, tt.size)
 
-			// Euler's formula for spherical Voronoi: V = 2n - 4
+			// Euler's formula for spherical Voronoi Diagram: V = 2n - 4
 			want := 2*tt.size - 4
 			got := len(vd.Vertices)
 			if got != want {
-				t.Errorf("ComputeVoronoiDiagram(...).Vertices count = %v, want %v", got, want)
+				t.Errorf("NewDiagram(...).Vertices count = %v, want %v", got, want)
 			}
 
 			want1 := tt.size
 			got1 := len(vd.Sites)
 			if got1 != want1 {
-				t.Errorf("ComputeVoronoiDiagram(...).Sites count = %v, want %v", got1, want1)
+				t.Errorf("NewDiagram(...).Sites count = %v, want %v", got1, want1)
 			}
 
 			want2 := len(vd.Sites)
 			got2 := vd.NumCells()
 			if got2 != want2 {
-				t.Errorf("ComputeVoronoiDiagram(...).NumCells() = %v, want %v", got2, want2)
+				t.Errorf("NewDiagram(...).NumCells() = %v, want %v", got2, want2)
 			}
 		})
 	}
 }
 
-func TestComputeVoronoiDiagram_OnSphere(t *testing.T) {
-	vd := mustComputeVoronoiDiagram(t, 100)
+func TestNewDiagram_OnSphere(t *testing.T) {
+	vd := mustNewDiagram(t, 100)
 
 	for i, v := range vd.Vertices {
 		n := v.Norm()
 		if math.Abs(n-1.0) > defaultEps {
-			t.Errorf("ComputeVoronoiDiagram(...).Vertices[%d] norm = %v, want ~1.0", i, n)
+			t.Errorf("NewDiagram(...).Vertices[%d] norm = %v, want ~1.0", i, n)
 		}
 	}
 
 	for i, s := range vd.Sites {
 		n := s.Norm()
 		if math.Abs(n-1.0) > defaultEps {
-			t.Errorf("ComputeVoronoiDiagram(...).Sites[%d] norm = %v, want ~1.0", i, n)
+			t.Errorf("NewDiagram(...).Sites[%d] norm = %v, want ~1.0", i, n)
 		}
 	}
 }
 
-func TestComputeVoronoiDiagram_VerifyCCW(t *testing.T) {
-	vd := mustComputeVoronoiDiagram(t, 100)
+func TestNewDiagram_VerifyCCW(t *testing.T) {
+	vd := mustNewDiagram(t, 100)
 
 	for i := range vd.NumCells() {
 		cell := vd.Cell(i)
@@ -103,7 +103,7 @@ func TestComputeVoronoiDiagram_VerifyCCW(t *testing.T) {
 
 			angle := computeAngleCCW(c, n, center)
 			if angle <= 0 {
-				t.Errorf("ComputeVoronoiDiagram(...).Cell(%d) Vertices %v,%v not sort in CCW", i,
+				t.Errorf("NewDiagram(...).Cell(%d) Vertices %v,%v not sort in CCW", i,
 					cIdx, nIdx)
 			}
 		}
@@ -116,7 +116,7 @@ func TestComputeVoronoiDiagram_VerifyCCW(t *testing.T) {
 
 			angle := computeAngleCCW(c, n, center)
 			if angle <= 0 {
-				t.Errorf("ComputeVoronoiDiagram(...).Cell(%d) Neighbors %v,%v not sort in CCW", i,
+				t.Errorf("NewDiagram(...).Cell(%d) Neighbors %v,%v not sort in CCW", i,
 					cIdx, nIdx)
 			}
 		}
@@ -135,18 +135,18 @@ func computeAngleCCW(refVec, vec, normal s2.Point) float64 {
 	return angle
 }
 
-func TestComputeVoronoiTriangulation_DegenerateInput(t *testing.T) {
+func TestNewTriangulation_DegenerateInput(t *testing.T) {
 	// TODO: Add more tests for broken or invalid scenarios.
 	points := utils.GenerateRandomPoints(3, 0)
-	if _, err := ComputeVoronoiDiagram(points, 0); err == nil {
-		t.Errorf("ComputeDelaunayTriangulation(...) error = nil, want non-nil")
+	if _, err := NewDiagram(points, 0); err == nil {
+		t.Errorf("NewDelaunayTriangulation(...) error = nil, want non-nil")
 	}
 }
 
 // Cell
 
 func TestCell_SiteIndex(t *testing.T) {
-	vd := mustComputeVoronoiDiagram(t, 100)
+	vd := mustNewDiagram(t, 100)
 	for i := range vd.Sites {
 		c := vd.Cell(i)
 		if got := c.SiteIndex(); got != i {
@@ -156,7 +156,7 @@ func TestCell_SiteIndex(t *testing.T) {
 }
 
 func TestCell_Site(t *testing.T) {
-	vd := mustComputeVoronoiDiagram(t, 100)
+	vd := mustNewDiagram(t, 100)
 	for i, want := range vd.Sites {
 		c := vd.Cell(i)
 		if got := c.Site(); got != want {
@@ -166,7 +166,7 @@ func TestCell_Site(t *testing.T) {
 }
 
 func TestCell_NumVertices(t *testing.T) {
-	vd := mustComputeVoronoiDiagram(t, 100)
+	vd := mustNewDiagram(t, 100)
 	for i := range vd.Sites {
 		c := vd.Cell(i)
 		want := vd.CellOffsets[i+1] - c.vd.CellOffsets[i]
@@ -177,7 +177,7 @@ func TestCell_NumVertices(t *testing.T) {
 }
 
 func TestCell_VertexIndices(t *testing.T) {
-	vd := mustComputeVoronoiDiagram(t, 100)
+	vd := mustNewDiagram(t, 100)
 	for i := range vd.Sites {
 		c := vd.Cell(i)
 		want := vd.CellVertices[vd.CellOffsets[i]:vd.CellOffsets[i+1]]
@@ -189,7 +189,7 @@ func TestCell_VertexIndices(t *testing.T) {
 }
 
 func TestCell_Vertex(t *testing.T) {
-	vd := mustComputeVoronoiDiagram(t, 100)
+	vd := mustNewDiagram(t, 100)
 	for i := range vd.Sites {
 		c := vd.Cell(i)
 		indices := c.VertexIndices()
@@ -204,7 +204,7 @@ func TestCell_Vertex(t *testing.T) {
 }
 
 func TestCell_NumNeighbors(t *testing.T) {
-	vd := mustComputeVoronoiDiagram(t, 100)
+	vd := mustNewDiagram(t, 100)
 	for i := range vd.Sites {
 		c := vd.Cell(i)
 		want := vd.CellOffsets[i+1] - vd.CellOffsets[i]
@@ -215,7 +215,7 @@ func TestCell_NumNeighbors(t *testing.T) {
 }
 
 func TestCell_NeighborIndices(t *testing.T) {
-	vd := mustComputeVoronoiDiagram(t, 100)
+	vd := mustNewDiagram(t, 100)
 	for i := range vd.Sites {
 		c := vd.Cell(i)
 		want := vd.CellNeighbors[vd.CellOffsets[i]:vd.CellOffsets[i+1]]
@@ -227,7 +227,7 @@ func TestCell_NeighborIndices(t *testing.T) {
 }
 
 func TestCell_Neighbor(t *testing.T) {
-	vd := mustComputeVoronoiDiagram(t, 100)
+	vd := mustNewDiagram(t, 100)
 	for i := range vd.Sites {
 		c := vd.Cell(i)
 		neighbors := c.NeighborIndices()
@@ -272,12 +272,12 @@ func TestTriangleCircumcenter(t *testing.T) {
 	}
 }
 
-func mustComputeVoronoiDiagram(t *testing.T, n int) *VoronoiDiagram {
+func mustNewDiagram(t *testing.T, n int) *Diagram {
 	t.Helper()
 	points := utils.GenerateRandomPoints(n, 0)
-	vd, err := ComputeVoronoiDiagram(points, 0)
+	vd, err := NewDiagram(points, 0)
 	if err != nil {
-		t.Fatalf("ComputeVoronoiDiagram(...) error = %v, want nil", err)
+		t.Fatalf("NewDiagram(...) error = %v, want nil", err)
 	}
 	return vd
 }

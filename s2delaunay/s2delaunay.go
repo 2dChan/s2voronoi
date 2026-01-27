@@ -16,7 +16,7 @@ const (
 	defaultEps = 1e-12
 )
 
-type DelaunayTriangulation struct {
+type Triangulation struct {
 	Vertices  s2.PointVector
 	Triangles [][3]int
 	// NOTE: Sort in CCW per vertex(look out of sphere)
@@ -24,7 +24,7 @@ type DelaunayTriangulation struct {
 	IncidentTriangleOffsets []int
 }
 
-func (dt *DelaunayTriangulation) IncidentTriangles(vIdx int) []int {
+func (dt *Triangulation) IncidentTriangles(vIdx int) []int {
 	if vIdx < 0 || vIdx+1 >= len(dt.IncidentTriangleOffsets) {
 		panic("IncidentTriangles: vIdx out of range")
 	}
@@ -33,7 +33,7 @@ func (dt *DelaunayTriangulation) IncidentTriangles(vIdx int) []int {
 	return dt.IncidentTriangleIndices[start:end]
 }
 
-func (dt *DelaunayTriangulation) TriangleVertices(tIdx int) (s2.Point, s2.Point, s2.Point) {
+func (dt *Triangulation) TriangleVertices(tIdx int) (s2.Point, s2.Point, s2.Point) {
 	if tIdx < 0 || tIdx >= len(dt.Triangles) {
 		panic("TriangleVertices: tIdx out of bounds")
 	}
@@ -41,25 +41,25 @@ func (dt *DelaunayTriangulation) TriangleVertices(tIdx int) (s2.Point, s2.Point,
 	return dt.Vertices[t[0]], dt.Vertices[t[1]], dt.Vertices[t[2]]
 }
 
-type DelaunayTriangulationOptions struct {
+type TriangulationOptions struct {
 	Eps float64
 }
 
-type DelaunayTriangulationOption func(*DelaunayTriangulationOptions)
+type TriangulationOption func(*TriangulationOptions)
 
-func WithEps(eps float64) DelaunayTriangulationOption {
+func WithEps(eps float64) TriangulationOption {
 	if eps <= 0 {
 		panic("WithEps: eps must be non-negative")
 	}
 
-	return func(o *DelaunayTriangulationOptions) {
+	return func(o *TriangulationOptions) {
 		o.Eps = eps
 	}
 }
 
 // NOTE: All vertices must lie on a sphere.
-func ComputeDelaunayTriangulation(vertices s2.PointVector, setters ...DelaunayTriangulationOption) (*DelaunayTriangulation, error) {
-	opts := DelaunayTriangulationOptions{
+func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (*Triangulation, error) {
+	opts := TriangulationOptions{
 		Eps: defaultEps,
 	}
 	for _, set := range setters {
@@ -72,7 +72,7 @@ func ComputeDelaunayTriangulation(vertices s2.PointVector, setters ...DelaunayTr
 			errors.New("s2delaunay: insufficient vertices for triangulation (minimum 4 required)")
 	}
 	numTriangles := 2 * (numVertices - 2)
-	dt := &DelaunayTriangulation{
+	dt := &Triangulation{
 		Vertices:                vertices,
 		Triangles:               make([][3]int, numTriangles),
 		IncidentTriangleIndices: make([]int, numTriangles*3),
