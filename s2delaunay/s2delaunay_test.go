@@ -48,11 +48,13 @@ func TestWithEps_Panic(t *testing.T) {
 // Triangulation
 
 func TestNewTriangulation_WithEps(t *testing.T) {
+	const (
+		customEps = 0.01
+	)
 	vertices := utils.GenerateRandomPoints(10, 0)
-	customEps := 0.01
 	_, err := NewTriangulation(vertices, WithEps(customEps))
 	if err != nil {
-		t.Fatalf("NewTriangulation failed: %v", err)
+		t.Fatalf("NewTriangulation(...): error = %v, want nil", err)
 	}
 }
 
