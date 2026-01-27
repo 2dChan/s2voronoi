@@ -16,14 +16,14 @@ import (
 	"github.com/markus-wa/quickhull-go/v2"
 )
 
-// DelaunayTriangulationOptions
+// TriangulationOptions
 
 func TestWithEps(t *testing.T) {
 	const (
 		eps = 0.5
 	)
 
-	opts := &DelaunayTriangulationOptions{Eps: 0}
+	opts := &TriangulationOptions{Eps: 0}
 	opt := WithEps(eps)
 	opt(opts)
 	if opts.Eps != eps {
@@ -89,7 +89,7 @@ func TestTriangleNextVertex_Panic(t *testing.T) {
 	NextVertex(tri, -1)
 }
 
-// DelaunayTriangulation
+// Triangulation
 
 func BenchmarkConvexHull(b *testing.B) {
 	sizes := []int{1e+2, 1e+3, 1e+4, 1e+5}
@@ -111,7 +111,7 @@ func BenchmarkConvexHull(b *testing.B) {
 	}
 }
 
-func BenchmarkComputeDelaunayTriangulation(b *testing.B) {
+func BenchmarkNewTriangulation(b *testing.B) {
 	sizes := []int{1e+2, 1e+3, 1e+4, 1e+5}
 	for _, pointsCnt := range sizes {
 		b.Run(fmt.Sprintf("N%d", pointsCnt), func(b *testing.B) {
@@ -119,9 +119,9 @@ func BenchmarkComputeDelaunayTriangulation(b *testing.B) {
 
 			b.ResetTimer()
 			for b.Loop() {
-				_, err := ComputeDelaunayTriangulation(points)
+				_, err := NewTriangulation(points)
 				if err != nil {
-					b.Fatalf("ComputeDelaunayTriangulation(...) error = %v, want nil", err)
+					b.Fatalf("NewTriangulation(...) error = %v, want nil", err)
 				}
 			}
 		})
@@ -129,7 +129,7 @@ func BenchmarkComputeDelaunayTriangulation(b *testing.B) {
 }
 
 func TestIncidentTriangles(t *testing.T) {
-	dt := &DelaunayTriangulation{
+	dt := &Triangulation{
 		Vertices:                nil,
 		Triangles:               nil,
 		IncidentTriangleIndices: []int{0, 1, 1, 1, 2},
@@ -156,7 +156,7 @@ func TestIncidentTriangles(t *testing.T) {
 	}
 }
 func TestIncidentTriangles_Panic(t *testing.T) {
-	dt := &DelaunayTriangulation{
+	dt := &Triangulation{
 		Vertices:                nil,
 		Triangles:               nil,
 		IncidentTriangleIndices: []int{0, 1, 1, 1, 2},
@@ -184,7 +184,7 @@ func TestIncidentTriangles_Panic(t *testing.T) {
 
 func TestTriangleVertices(t *testing.T) {
 	points := utils.GenerateRandomPoints(3, 0)
-	dt := &DelaunayTriangulation{
+	dt := &Triangulation{
 		Vertices: s2.PointVector{points[0], points[1], points[2]},
 		Triangles: [][3]int{
 			{0, 1, 2},
@@ -201,7 +201,7 @@ func TestTriangleVertices(t *testing.T) {
 
 func TestTriangleVertices_Panic(t *testing.T) {
 	points := utils.GenerateRandomPoints(3, 0)
-	dt := &DelaunayTriangulation{
+	dt := &Triangulation{
 		Vertices: s2.PointVector{points[0], points[1], points[2]},
 		Triangles: [][3]int{
 			{0, 1, 2},
@@ -227,55 +227,55 @@ func TestTriangleVertices_Panic(t *testing.T) {
 	checkPanic(-1)
 }
 
-func TestComputeDelaunayTriangulation_WithEps(t *testing.T) {
+func TestNewTriangulation_WithEps(t *testing.T) {
 	vertices := utils.GenerateRandomPoints(10, 0)
 	customEps := 0.01
-	_, err := ComputeDelaunayTriangulation(vertices, WithEps(customEps))
+	_, err := NewTriangulation(vertices, WithEps(customEps))
 	if err != nil {
-		t.Fatalf("ComputeDelaunayTriangulation failed: %v", err)
+		t.Fatalf("NewTriangulation failed: %v", err)
 	}
 }
 
-func TestComputeDelaunayTriangulation_DegenerateInput(t *testing.T) {
+func TestNewTriangulation_DegenerateInput(t *testing.T) {
 	vertices := s2.PointVector{
 		s2.PointFromCoords(1, 0, 0),
 		s2.PointFromCoords(0, 1, 0),
 		s2.PointFromCoords(0, 0, 1),
 	}
-	if _, err := ComputeDelaunayTriangulation(vertices); err == nil {
-		t.Errorf("ComputeDelaunayTriangulation(...) error = nil, want non-nil")
+	if _, err := NewTriangulation(vertices); err == nil {
+		t.Errorf("NewTriangulation(...) error = nil, want non-nil")
 	}
 }
 
-func TestComputeDelaunayTriangulation_VerticesOnSphere(t *testing.T) {
-	dt := mustComputeDelaunayTriangulation(t, 100)
+func TestNewTriangulation_VerticesOnSphere(t *testing.T) {
+	dt := mustNewTriangulation(t, 100)
 
 	for i, p := range dt.Vertices {
 		norm := p.Norm()
 		if math.Abs(norm-1.0) > defaultEps {
 			t.Errorf(
-				"ComputeDelaunayTriangulation(...).Vertices[%d] norm = %v, want ~1.0", i,
+				"NewTriangulation(...).Vertices[%d] norm = %v, want ~1.0", i,
 				norm)
 		}
 	}
 }
 
-func TestComputeDelaunayTriangulation_VerifyTrianglesCCW(t *testing.T) {
-	dt := mustComputeDelaunayTriangulation(t, 100)
+func TestNewTriangulation_VerifyTrianglesCCW(t *testing.T) {
+	dt := mustNewTriangulation(t, 100)
 
 	for i, tri := range dt.Triangles {
 		p0, p1, p2 := dt.Vertices[tri[0]], dt.Vertices[tri[1]], dt.Vertices[tri[2]]
 		cross := p1.Sub(p0.Vector).Cross(p2.Sub(p0.Vector))
 		dot := cross.Dot(p0.Vector)
 		if dot < 0 {
-			t.Errorf("ComputeDelaunayTriangulation(...).Triangles[%d] vertices not sorted in CCW",
+			t.Errorf("NewTriangulation(...).Triangles[%d] vertices not sorted in CCW",
 				i)
 		}
 	}
 }
 
-func TestComputeDelaunayTriangulation_VerifyIncidentTrianglesSorted(t *testing.T) {
-	dt := mustComputeDelaunayTriangulation(t, 100)
+func TestNewTriangulation_VerifyIncidentTrianglesSorted(t *testing.T) {
+	dt := mustNewTriangulation(t, 100)
 
 	for vIdx := range len(dt.Vertices) {
 		incidentTris := dt.IncidentTriangles(vIdx)
@@ -368,13 +368,13 @@ func cyclicEqual(a, b []int) bool {
 	return false
 }
 
-func mustComputeDelaunayTriangulation(t *testing.T, n int) *DelaunayTriangulation {
+func mustNewTriangulation(t *testing.T, n int) *Triangulation {
 	t.Helper()
 	vertices := utils.GenerateRandomPoints(n, 0)
 
-	dt, err := ComputeDelaunayTriangulation(vertices)
+	dt, err := NewTriangulation(vertices)
 	if err != nil {
-		t.Fatalf("ComputeDelaunayTriangulation(...) error = %v, want nil", err)
+		t.Fatalf("NewTriangulation(...) error = %v, want nil", err)
 	}
 	return dt
 }

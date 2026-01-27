@@ -44,7 +44,7 @@ func PointToScreen(p s2.Point) (int, int) {
 	return int(x * width), int(y * height)
 }
 
-func renderVoronoiDiagram(vd *s2voronoi.VoronoiDiagram) {
+func renderDiagram(vd *s2voronoi.Diagram) {
 	file, err := os.Create(filename)
 	if err != nil {
 		panic(err)
@@ -94,11 +94,11 @@ func renderVoronoiDiagram(vd *s2voronoi.VoronoiDiagram) {
 
 func main() {
 	points := utils.GenerateRandomPoints(1000, 0)
-	vd, err := s2voronoi.ComputeVoronoiDiagram(points, 0)
+	vd, err := s2voronoi.NewDiagram(points, 0)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 
-	renderVoronoiDiagram(vd)
+	renderDiagram(vd)
 }
