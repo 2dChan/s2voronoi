@@ -16,38 +16,9 @@ const (
 	defaultEps = 1e-12
 )
 
-type Triangle struct {
-	// NOTE: Sort in CCW(look out of sphere)
-	V [3]int
-}
-
-func (t *Triangle) PrevVertex(vIdx int) int {
-	switch vIdx {
-	case t.V[0]:
-		return t.V[2]
-	case t.V[1]:
-		return t.V[0]
-	case t.V[2]:
-		return t.V[1]
-	}
-	panic("PrevVertex: vIdx not in triangle")
-}
-
-func (t *Triangle) NextVertex(vIdx int) int {
-	switch vIdx {
-	case t.V[0]:
-		return t.V[1]
-	case t.V[1]:
-		return t.V[2]
-	case t.V[2]:
-		return t.V[0]
-	}
-	panic("NextVertex: vIdx not in triangle")
-}
-
 type DelaunayTriangulation struct {
 	Vertices  s2.PointVector
-	Triangles []Triangle
+	Triangles [][3]int
 	// NOTE: Sort in CCW per vertex(look out of sphere)
 	IncidentTriangleIndices []int
 	IncidentTriangleOffsets []int
@@ -67,7 +38,7 @@ func (dt *DelaunayTriangulation) TriangleVertices(tIdx int) (s2.Point, s2.Point,
 		panic("TriangleVertices: tIdx out of bounds")
 	}
 	t := dt.Triangles[tIdx]
-	return dt.Vertices[t.V[0]], dt.Vertices[t.V[1]], dt.Vertices[t.V[2]]
+	return dt.Vertices[t[0]], dt.Vertices[t[1]], dt.Vertices[t[2]]
 }
 
 type DelaunayTriangulationOptions struct {
@@ -103,7 +74,7 @@ func ComputeDelaunayTriangulation(vertices s2.PointVector, setters ...DelaunayTr
 	numTriangles := 2 * (numVertices - 2)
 	dt := &DelaunayTriangulation{
 		Vertices:                vertices,
-		Triangles:               make([]Triangle, numTriangles),
+		Triangles:               make([][3]int, numTriangles),
 		IncidentTriangleIndices: make([]int, numTriangles*3),
 		IncidentTriangleOffsets: make([]int, numVertices+1),
 	}
@@ -131,7 +102,7 @@ func ComputeDelaunayTriangulation(vertices s2.PointVector, setters ...DelaunayTr
 		base := i * 3
 		for j := range 3 {
 			v := ch.Indices[base+j]
-			dt.Triangles[i].V[j] = v
+			dt.Triangles[i][j] = v
 			dt.IncidentTriangleIndices[nxt[v]] = i
 			nxt[v]++
 		}
@@ -146,24 +117,48 @@ func ComputeDelaunayTriangulation(vertices s2.PointVector, setters ...DelaunayTr
 	return dt, nil
 }
 
-func sortTriangleVerticesCCW(t *Triangle, v s2.PointVector) {
-	p0, p1, p2 := v[t.V[0]], v[t.V[1]], v[t.V[2]]
+func sortTriangleVerticesCCW(t *[3]int, v s2.PointVector) {
+	p0, p1, p2 := v[t[0]], v[t[1]], v[t[2]]
 	norm := p1.Sub(p0.Vector).Cross(p2.Sub(p0.Vector))
 	if norm.Dot(p0.Vector) < 0 {
-		t.V[1], t.V[2] = t.V[2], t.V[1]
+		t[1], t[2] = t[2], t[1]
 	}
 }
 
-func sortIncidentTriangleIndicesCCW(vIdx int, incidentTris []int, tris []Triangle) {
+func sortIncidentTriangleIndicesCCW(vIdx int, incidentTris []int, tris [][3]int) {
 	n := len(incidentTris)
 	for i := 1; i < n; i++ {
-		nxt := tris[incidentTris[i-1]].NextVertex(vIdx)
+		nxt := NextVertex(tris[incidentTris[i-1]], vIdx)
 		for j := i + 1; j < n; j++ {
-			prv := tris[incidentTris[j]].PrevVertex(vIdx)
+			prv := PrevVertex(tris[incidentTris[j]], vIdx)
 			if nxt == prv {
 				incidentTris[i], incidentTris[j] = incidentTris[j], incidentTris[i]
 				break
 			}
 		}
 	}
+}
+
+func PrevVertex(t [3]int, vIdx int) int {
+	switch vIdx {
+	case t[0]:
+		return t[2]
+	case t[1]:
+		return t[0]
+	case t[2]:
+		return t[1]
+	}
+	panic("PrevVertex: vIdx not in triangle")
+}
+
+func NextVertex(t [3]int, vIdx int) int {
+	switch vIdx {
+	case t[0]:
+		return t[1]
+	case t[1]:
+		return t[2]
+	case t[2]:
+		return t[0]
+	}
+	panic("NextVertex: vIdx not in triangle")
 }

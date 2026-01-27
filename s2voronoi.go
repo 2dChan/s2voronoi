@@ -61,7 +61,7 @@ func ComputeVoronoiDiagram(sites s2.PointVector, eps float64) (*VoronoiDiagram, 
 		offset := dt.IncidentTriangleOffsets[vIdx]
 		it := dt.IncidentTriangles(vIdx)
 		for i, tIdx := range it {
-			vd.CellNeighbors[offset+i] = dt.Triangles[tIdx].NextVertex(vIdx)
+			vd.CellNeighbors[offset+i] = s2delaunay.NextVertex(dt.Triangles[tIdx], vIdx)
 		}
 	}
 

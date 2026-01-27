@@ -48,11 +48,10 @@ func TestWithEps_Panic(t *testing.T) {
 // Triangle
 
 func TestTrianglePrevVertex(t *testing.T) {
-	verts := [3]int{1, 2, 3}
-	tri := Triangle{V: verts}
-	for i, in := range tri.V {
-		got := tri.PrevVertex(in)
-		want := verts[(i+2)%len(tri.V)]
+	tri := [3]int{1, 2, 3}
+	for i, in := range tri {
+		got := PrevVertex(tri, in)
+		want := tri[(i+2)%len(tri)]
 		if got != want {
 			t.Errorf("tri.PrevVertex(%v) = %v, want %v", in, got, want)
 		}
@@ -60,21 +59,20 @@ func TestTrianglePrevVertex(t *testing.T) {
 }
 
 func TestTrianglePrevVertex_Panic(t *testing.T) {
-	tri := Triangle{V: [3]int{1, 2, 3}}
+	tri := [3]int{1, 2, 3}
 	defer func() {
 		if r := recover(); r == nil {
 			t.Errorf("PrevVertex should panic for vIdx not in triangle")
 		}
 	}()
-	tri.PrevVertex(-1)
+	PrevVertex(tri, -1)
 }
 
 func TestTriangleNextVertex(t *testing.T) {
-	verts := [3]int{1, 2, 3}
-	tri := Triangle{V: verts}
-	for i, in := range tri.V {
-		got := tri.NextVertex(in)
-		want := verts[(i+1)%len(tri.V)]
+	tri := [3]int{1, 2, 3}
+	for i, in := range tri {
+		got := NextVertex(tri, in)
+		want := tri[(i+1)%len(tri)]
 		if got != want {
 			t.Errorf("tri.NextVertex(%v) = %v, want %v", in, got, want)
 		}
@@ -82,13 +80,13 @@ func TestTriangleNextVertex(t *testing.T) {
 }
 
 func TestTriangleNextVertex_Panic(t *testing.T) {
-	tri := Triangle{V: [3]int{1, 2, 3}}
+	tri := [3]int{1, 2, 3}
 	defer func() {
 		if r := recover(); r == nil {
 			t.Errorf("PrevVertex should panic for vIdx not in triangle")
 		}
 	}()
-	tri.NextVertex(-1)
+	NextVertex(tri, -1)
 }
 
 // DelaunayTriangulation
@@ -188,8 +186,8 @@ func TestTriangleVertices(t *testing.T) {
 	points := utils.GenerateRandomPoints(3, 0)
 	dt := &DelaunayTriangulation{
 		Vertices: s2.PointVector{points[0], points[1], points[2]},
-		Triangles: []Triangle{
-			{V: [3]int{0, 1, 2}},
+		Triangles: [][3]int{
+			{0, 1, 2},
 		},
 	}
 
@@ -205,8 +203,8 @@ func TestTriangleVertices_Panic(t *testing.T) {
 	points := utils.GenerateRandomPoints(3, 0)
 	dt := &DelaunayTriangulation{
 		Vertices: s2.PointVector{points[0], points[1], points[2]},
-		Triangles: []Triangle{
-			{V: [3]int{0, 1, 2}},
+		Triangles: [][3]int{
+			{0, 1, 2},
 		},
 	}
 
@@ -265,8 +263,8 @@ func TestComputeDelaunayTriangulation_VerticesOnSphere(t *testing.T) {
 func TestComputeDelaunayTriangulation_VerifyTrianglesCCW(t *testing.T) {
 	dt := mustComputeDelaunayTriangulation(t, 100)
 
-	for i, tt := range dt.Triangles {
-		p0, p1, p2 := dt.Vertices[tt.V[0]], dt.Vertices[tt.V[1]], dt.Vertices[tt.V[2]]
+	for i, tri := range dt.Triangles {
+		p0, p1, p2 := dt.Vertices[tri[0]], dt.Vertices[tri[1]], dt.Vertices[tri[2]]
 		cross := p1.Sub(p0.Vector).Cross(p2.Sub(p0.Vector))
 		dot := cross.Dot(p0.Vector)
 		if dot < 0 {
@@ -285,8 +283,8 @@ func TestComputeDelaunayTriangulation_VerifyIncidentTrianglesSorted(t *testing.T
 			ct := dt.Triangles[incidentTris[i-1]]
 			nt := dt.Triangles[incidentTris[i]]
 
-			nextVertex := ct.NextVertex(vIdx)
-			prevVertex := nt.PrevVertex(vIdx)
+			nextVertex := NextVertex(ct, vIdx)
+			prevVertex := PrevVertex(nt, vIdx)
 
 			if nextVertex != prevVertex {
 				t.Errorf("dt.IncidentTriangles(%d) triangles %v and %v not CCW neighbors", vIdx,
@@ -303,27 +301,27 @@ func TestSortTriangleVerticesCCW(t *testing.T) {
 	verts := s2.PointVector{a, b, c}
 
 	want1 := [3]int{0, 1, 2}
-	tri1 := &Triangle{V: [3]int{0, 1, 2}}
-	sortTriangleVerticesCCW(tri1, verts)
-	if tri1.V != want1 {
-		t.Errorf("sortTriangleVerticesCCW([0 1 2], verts): tri1.V = %v, want %v", tri1.V, want1)
+	tri1 := [3]int{0, 1, 2}
+	sortTriangleVerticesCCW(&tri1, verts)
+	if diff := cmp.Diff(want1, tri1); diff != "" {
+		t.Errorf("sortTriangleVerticesCCW([0 1 2], verts) mismatch (-want +got):\n%s", diff)
 	}
 
 	want2 := [3]int{0, 1, 2}
-	tri2 := &Triangle{V: [3]int{0, 2, 1}}
-	sortTriangleVerticesCCW(tri2, verts)
-	if tri2.V != want2 {
-		t.Errorf("sortTriangleVerticesCCW([0 2 1], verts): tri2.V = %v, want %v", tri2.V, want2)
+	tri2 := [3]int{0, 2, 1}
+	sortTriangleVerticesCCW(&tri2, verts)
+	if diff := cmp.Diff(want2, tri2); diff != "" {
+		t.Errorf("sortTriangleVerticesCCW([0 2 1], verts) mismatch (-want +got):\n%s", diff)
 	}
 }
 
 func TestSortIncidentTriangleIndicesCCW(t *testing.T) {
 	expected3 := []int{0, 2, 1}
 	incident3 := []int{0, 1, 2}
-	tris3 := []Triangle{
-		{V: [3]int{0, 1, 2}},
-		{V: [3]int{0, 2, 3}},
-		{V: [3]int{0, 3, 1}},
+	tris3 := [][3]int{
+		{0, 1, 2},
+		{0, 2, 3},
+		{0, 3, 1},
 	}
 	sortIncidentTriangleIndicesCCW(0, incident3, tris3)
 	if cyclicEqual(incident3, expected3) == false {
@@ -332,13 +330,13 @@ func TestSortIncidentTriangleIndicesCCW(t *testing.T) {
 
 	expected4 := []int{1, 0, 3, 2}
 	incident4 := []int{1, 3, 2, 0}
-	tris4 := []Triangle{
-		{V: [3]int{0, 1, 2}},
-		{V: [3]int{0, 2, 3}},
-		{V: [3]int{0, 3, 4}},
-		{V: [3]int{0, 4, 1}},
+	tris4 := [][3]int{
+		{0, 1, 2},
+		{0, 2, 3},
+		{0, 3, 4},
+		{0, 4, 1},
 	}
-	sortIncidentTriangleIndicesCCW(0, incident4, tris4)
+	sortIncidentTriangleIndicesCCW(0, incident4, tris4[:])
 	if cyclicEqual(incident4, expected4) == false {
 		t.Errorf("sortIncidentTriangleIndicesCCW(...): incident4 = %v, want %v", incident4, expected4)
 	}

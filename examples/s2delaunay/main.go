@@ -60,14 +60,14 @@ func renderDelaunayTriangulation(dt *s2delaunay.DelaunayTriangulation) {
 	canvas.Start(width, height)
 	canvas.Rect(0, 0, width, height, "fill:rgb(255,255,255)")
 
-	for _, t := range dt.Triangles {
-		pointsCnt := len(t.V)
+	for _, tri := range dt.Triangles {
+		pointsCnt := len(tri)
 		xPoints := make([]int, pointsCnt)
 		yPoints := make([]int, pointsCnt)
 
 		draw := true
-		x0, _ := PointToScreen(dt.Vertices[t.V[0]])
-		for i, id := range t.V {
+		x0, _ := PointToScreen(dt.Vertices[tri[0]])
+		for i, id := range tri {
 			xPoints[i], yPoints[i] = PointToScreen(dt.Vertices[id])
 
 			if Abs(x0-xPoints[i]) > width/2 {
@@ -91,7 +91,7 @@ func renderDelaunayTriangulation(dt *s2delaunay.DelaunayTriangulation) {
 
 func main() {
 	points := utils.GenerateRandomPoints(100, 0)
-	dt, err := s2delaunay.ComputeDelaunayTriangulation(points)
+	dt, err := s2delaunay.ComputeDelaunayTriangulation(points, s2delaunay.WithEps(0))
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
