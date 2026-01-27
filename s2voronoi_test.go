@@ -193,6 +193,7 @@ func BenchmarkNewDiagram(b *testing.B) {
 		b.Run(fmt.Sprintf("N%d", pointsCnt), func(b *testing.B) {
 			points := utils.GenerateRandomPoints(pointsCnt, 0)
 
+			b.ReportAllocs()
 			b.ResetTimer()
 			for b.Loop() {
 				_, err := NewDiagram(points)

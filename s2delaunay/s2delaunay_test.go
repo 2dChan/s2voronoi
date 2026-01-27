@@ -320,6 +320,7 @@ func BenchmarkConvexHull(b *testing.B) {
 
 			qh := new(quickhull.QuickHull)
 
+			b.ReportAllocs()
 			b.ResetTimer()
 			for b.Loop() {
 				qh.ConvexHull(v3, true, true, 0)
@@ -334,6 +335,7 @@ func BenchmarkNewTriangulation(b *testing.B) {
 		b.Run(fmt.Sprintf("N%d", pointsCnt), func(b *testing.B) {
 			points := utils.GenerateRandomPoints(pointsCnt, 0)
 
+			b.ReportAllocs()
 			b.ResetTimer()
 			for b.Loop() {
 				_, err := NewTriangulation(points)
