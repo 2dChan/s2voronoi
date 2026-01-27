@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 // See the LICENSE file in the project root for full license text.
 
+// Package s2delaunay implements Delaunay triangulation on the S2 sphere using convex hull algorithms.
+
 package s2delaunay
 
 import (
@@ -17,19 +19,30 @@ const (
 	defaultEps = 1e-12
 )
 
+// Triangulation represents a Delaunay triangulation on the S2 sphere.
 type Triangulation struct {
-	Vertices                s2.PointVector
-	Triangles               [][3]int
+	// Vertices are the input points on the unit sphere.
+	Vertices s2.PointVector
+	// Triangles are the triangulation triangles, each with three vertex indices,
+	// sorted CCW when looking out of the sphere.
+	Triangles [][3]int
+	// IncidentTriangleIndices contains indices of incident triangles for each vertex,
+	// sorted CCW when looking out of the sphere, forming a CSR-like sparse representation.
 	IncidentTriangleIndices []int
+	// IncidentTriangleOffsets contains offsets for slicing incident triangle data in a CSR-like format.
 	IncidentTriangleOffsets []int
 }
 
+// TriangulationOptions holds configuration options for Delaunay triangulation.
 type TriangulationOptions struct {
 	Eps float64
 }
 
+// TriangulationOption is a functional option type for triangulation configuration.
 type TriangulationOption func(*TriangulationOptions) error
 
+// WithEps sets the numerical precision epsilon for triangulation.
+// It must be positive.
 func WithEps(eps float64) TriangulationOption {
 	return func(o *TriangulationOptions) error {
 		if eps <= 0 {
@@ -40,6 +53,9 @@ func WithEps(eps float64) TriangulationOption {
 	}
 }
 
+// NewTriangulation creates a Delaunay triangulation from the given vertices.
+// The vertices must lie on the unit sphere, there must be at least 4 vertices, and they must not be coplanar.
+// It returns an error if the triangulation cannot be constructed.
 func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (*Triangulation,
 	error) {
 	opts := TriangulationOptions{
@@ -101,6 +117,9 @@ func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (
 	return t, nil
 }
 
+// IncidentTriangles returns the indices of triangles incident to the vertex at the given index,
+// sorted in CCW order when looking out of the sphere.
+// It returns an error if the vertex index is out of range.
 func (t *Triangulation) IncidentTriangles(vIdx int) ([]int, error) {
 	if vIdx < 0 || vIdx+1 >= len(t.IncidentTriangleOffsets) {
 		return nil,
@@ -112,6 +131,8 @@ func (t *Triangulation) IncidentTriangles(vIdx int) ([]int, error) {
 	return t.IncidentTriangleIndices[start:end], nil
 }
 
+// TriangleVertices returns the three vertices of the triangle at the given index.
+// It returns an error if the triangle index is out of bounds.
 func (t *Triangulation) TriangleVertices(tIdx int) ([3]s2.Point, error) {
 	if tIdx < 0 || tIdx >= len(t.Triangles) {
 		return [3]s2.Point{},
@@ -121,6 +142,7 @@ func (t *Triangulation) TriangleVertices(tIdx int) ([3]s2.Point, error) {
 	return [3]s2.Point{t.Vertices[tri[0]], t.Vertices[tri[1]], t.Vertices[tri[2]]}, nil
 }
 
+// sortTriangleVerticesCCW sorts triangle vertices in CCW order.
 func sortTriangleVerticesCCW(t *[3]int, v s2.PointVector) {
 	p0, p1, p2 := v[t[0]], v[t[1]], v[t[2]]
 	norm := p1.Sub(p0.Vector).Cross(p2.Sub(p0.Vector))
@@ -129,6 +151,7 @@ func sortTriangleVerticesCCW(t *[3]int, v s2.PointVector) {
 	}
 }
 
+// sortIncidentTriangleIndicesCCW sorts incident triangle indices in CCW order.
 func sortIncidentTriangleIndicesCCW(vIdx int, incidentTris []int, tris [][3]int) {
 	n := len(incidentTris)
 	for i := 1; i < n; i++ {
@@ -149,6 +172,8 @@ func sortIncidentTriangleIndicesCCW(vIdx int, incidentTris []int, tris [][3]int)
 	}
 }
 
+// PrevVertex returns the previous vertex in the triangle relative to the given vertex index.
+// It returns an error if the vertex index is not part of the triangle.
 func PrevVertex(t [3]int, vIdx int) (int, error) {
 	switch vIdx {
 	case t[0]:
@@ -161,6 +186,8 @@ func PrevVertex(t [3]int, vIdx int) (int, error) {
 	return 0, fmt.Errorf("PrevVertex: vIdx %d not in triangle", vIdx)
 }
 
+// NextVertex returns the next vertex in the triangle relative to the given vertex index.
+// It returns an error if the vertex index is not part of the triangle.
 func NextVertex(t [3]int, vIdx int) (int, error) {
 	switch vIdx {
 	case t[0]:

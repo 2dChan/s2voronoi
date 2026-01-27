@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 // See the LICENSE file in the project root for full license text.
 
+// Package utils provides utility functions for generating and manipulating S2 points for Voronoi diagrams.
+
 package utils
 
 import (
@@ -12,6 +14,8 @@ import (
 	"github.com/golang/geo/s2"
 )
 
+// GenerateRandomPoints generates a vector of random points on the S2 sphere.
+// The seed parameter ensures reproducibility.
 func GenerateRandomPoints(cnt int, seed int64) s2.PointVector {
 	//nolint:gosec
 	random := rand.New(rand.NewSource(seed))
