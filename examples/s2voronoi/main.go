@@ -61,30 +61,16 @@ func renderDiagram(vd *s2voronoi.Diagram) {
 	canvas.Rect(0, 0, width, height, "fill:rgb(255,255,255)")
 
 	for i := range vd.NumCells() {
-		cell, err := vd.Cell(i)
-		if err != nil {
-			log.Printf("error getting cell %d: %v", i, err)
-			continue
-		}
-
+		cell := vd.Cell(i)
 		numPoints := cell.NumVertices()
 		xPoints := make([]int, numPoints)
 		yPoints := make([]int, numPoints)
 
 		draw := true
-		v, err := cell.Vertex(0)
-		if err != nil {
-			log.Printf("error getting vertex for cell %d: %v", i, err)
-			continue
-		}
+		v := cell.Vertex(0)
 		x0, _ := PointToScreen(v)
-		for j := range cell.NumVertices() {
-			v, err := cell.Vertex(j)
-			if err != nil {
-				log.Printf("error getting vertex for cell %d: %v", i, err)
-				draw = false
-				break
-			}
+		for j := range numPoints {
+			v := cell.Vertex(j)
 
 			xPoints[j], yPoints[j] = PointToScreen(v)
 			if Abs(x0-xPoints[j]) > width/2 {
@@ -100,11 +86,7 @@ func renderDiagram(vd *s2voronoi.Diagram) {
 	}
 
 	for i := range vd.NumCells() {
-		cell, err := vd.Cell(i)
-		if err != nil {
-			log.Printf("error getting cell %d: %v", i, err)
-			continue
-		}
+		cell := vd.Cell(i)
 		site := cell.Site()
 		sx, sy := PointToScreen(site)
 		canvas.Circle(sx, sy, 3, siteStyle)

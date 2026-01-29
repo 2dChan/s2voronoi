@@ -108,10 +108,7 @@ func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (
 		sortTriangleVerticesCCW(&t.Triangles[i], t.Vertices)
 	}
 	for i := range numVertices {
-		incidentTriangles, err := t.IncidentTriangles(i)
-		if err != nil {
-			return nil, err
-		}
+		incidentTriangles := t.IncidentTriangles(i)
 		sortIncidentTriangleIndicesCCW(i, incidentTriangles, t.Triangles)
 	}
 	return t, nil
@@ -119,27 +116,25 @@ func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (
 
 // IncidentTriangles returns the indices of triangles incident to the vertex at the given index,
 // sorted in CCW order when looking out of the sphere.
-// It returns an error if the vertex index is out of range.
-func (t *Triangulation) IncidentTriangles(vIdx int) ([]int, error) {
+// It panics if the vertex index is out of range.
+func (t *Triangulation) IncidentTriangles(vIdx int) []int {
 	if vIdx < 0 || vIdx+1 >= len(t.IncidentTriangleOffsets) {
-		return nil,
-			fmt.Errorf("IncidentTriangles: vIdx %d out of range [0 %d)", vIdx,
-				len(t.IncidentTriangleOffsets)-1)
+		panic(fmt.Sprintf("IncidentTriangles: vIdx %d out of range [0 %d)", vIdx,
+			len(t.IncidentTriangleOffsets)-1))
 	}
 	start := t.IncidentTriangleOffsets[vIdx]
 	end := t.IncidentTriangleOffsets[vIdx+1]
-	return t.IncidentTriangleIndices[start:end], nil
+	return t.IncidentTriangleIndices[start:end]
 }
 
 // TriangleVertices returns the three vertices of the triangle at the given index.
-// It returns an error if the triangle index is out of bounds.
-func (t *Triangulation) TriangleVertices(tIdx int) ([3]s2.Point, error) {
+// It panics if the triangle index is out of bounds.
+func (t *Triangulation) TriangleVertices(tIdx int) [3]s2.Point {
 	if tIdx < 0 || tIdx >= len(t.Triangles) {
-		return [3]s2.Point{},
-			fmt.Errorf("TriangleVertices: tIdx %d out of bounds [0 %d)", tIdx, len(t.Triangles))
+		panic(fmt.Sprintf("TriangleVertices: tIdx %d out of bounds [0 %d)", tIdx, len(t.Triangles)))
 	}
 	tri := t.Triangles[tIdx]
-	return [3]s2.Point{t.Vertices[tri[0]], t.Vertices[tri[1]], t.Vertices[tri[2]]}, nil
+	return [3]s2.Point{t.Vertices[tri[0]], t.Vertices[tri[1]], t.Vertices[tri[2]]}
 }
 
 // sortTriangleVerticesCCW sorts triangle vertices in CCW order.
@@ -155,15 +150,9 @@ func sortTriangleVerticesCCW(t *[3]int, v s2.PointVector) {
 func sortIncidentTriangleIndicesCCW(vIdx int, incidentTris []int, tris [][3]int) {
 	n := len(incidentTris)
 	for i := 1; i < n; i++ {
-		nxt, err := NextVertex(tris[incidentTris[i-1]], vIdx)
-		if err != nil {
-			panic(err)
-		}
+		nxt := NextVertex(tris[incidentTris[i-1]], vIdx)
 		for j := i + 1; j < n; j++ {
-			prv, err := PrevVertex(tris[incidentTris[j]], vIdx)
-			if err != nil {
-				panic(err)
-			}
+			prv := PrevVertex(tris[incidentTris[j]], vIdx)
 			if nxt == prv {
 				incidentTris[i], incidentTris[j] = incidentTris[j], incidentTris[i]
 				break
@@ -173,29 +162,29 @@ func sortIncidentTriangleIndicesCCW(vIdx int, incidentTris []int, tris [][3]int)
 }
 
 // PrevVertex returns the previous vertex in the triangle relative to the given vertex index.
-// It returns an error if the vertex index is not part of the triangle.
-func PrevVertex(t [3]int, vIdx int) (int, error) {
+// It panics if the vertex index is not part of the triangle.
+func PrevVertex(t [3]int, vIdx int) int {
 	switch vIdx {
 	case t[0]:
-		return t[2], nil
+		return t[2]
 	case t[1]:
-		return t[0], nil
+		return t[0]
 	case t[2]:
-		return t[1], nil
+		return t[1]
 	}
-	return 0, fmt.Errorf("PrevVertex: vIdx %d not in triangle", vIdx)
+	panic(fmt.Sprintf("PrevVertex: vIdx %d not in triangle %v", vIdx, t))
 }
 
 // NextVertex returns the next vertex in the triangle relative to the given vertex index.
-// It returns an error if the vertex index is not part of the triangle.
-func NextVertex(t [3]int, vIdx int) (int, error) {
+// It panics if the vertex index is not part of the triangle.
+func NextVertex(t [3]int, vIdx int) int {
 	switch vIdx {
 	case t[0]:
-		return t[1], nil
+		return t[1]
 	case t[1]:
-		return t[2], nil
+		return t[2]
 	case t[2]:
-		return t[0], nil
+		return t[0]
 	}
-	return 0, fmt.Errorf("NextVertex: vIdx %d not in triangle", vIdx)
+	panic(fmt.Sprintf("NextVertex: vIdx %d not in triangle %v", vIdx, t))
 }

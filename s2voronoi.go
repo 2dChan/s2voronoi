@@ -85,24 +85,15 @@ func NewDiagram(sites s2.PointVector, setters ...DiagramOption) (*Diagram, error
 	}
 
 	for i := range numTriangles {
-		p, err := dt.TriangleVertices(i)
-		if err != nil {
-			return nil, err
-		}
+		p := dt.TriangleVertices(i)
 		d.Vertices[i] = s2.Point{Vector: triangleCircumcenter(p[0], p[1], p[2]).Normalize()}
 	}
 
 	for vIdx := range dt.Vertices {
 		offset := dt.IncidentTriangleOffsets[vIdx]
-		it, err := dt.IncidentTriangles(vIdx)
-		if err != nil {
-			return nil, err
-		}
+		it := dt.IncidentTriangles(vIdx)
 		for i, tIdx := range it {
-			nxt, err := s2delaunay.NextVertex(dt.Triangles[tIdx], vIdx)
-			if err != nil {
-				return nil, err
-			}
+			nxt := s2delaunay.NextVertex(dt.Triangles[tIdx], vIdx)
 			d.CellNeighbors[offset+i] = nxt
 		}
 	}
@@ -116,13 +107,13 @@ func (d *Diagram) NumCells() int {
 }
 
 // Cell returns the Voronoi cell at the specified index.
-// It returns an error if the index is out of range.
-func (d *Diagram) Cell(i int) (Cell, error) {
+// It panics if the index is out of range.
+func (d *Diagram) Cell(i int) Cell {
 	if i < 0 || i >= len(d.Sites) {
-		return Cell{}, fmt.Errorf("Cell: index %d out of range [0, %d)", i, len(d.Sites))
+		panic(fmt.Sprintf("Cell: index %d out of range [0, %d)", i, len(d.Sites)))
 	}
 
-	return Cell{idx: i, d: d}, nil
+	return Cell{idx: i, d: d}
 }
 
 // triangleCircumcenter computes the circumcenter of a triangle on the sphere.

@@ -107,23 +107,13 @@ func TestNewTriangulation_VerifyIncidentTrianglesSorted(t *testing.T) {
 	dt := mustNewTriangulation(t, 100)
 
 	for vIdx := range len(dt.Vertices) {
-		incidentTris, err := dt.IncidentTriangles(vIdx)
-		if err != nil {
-			t.Fatalf("dt.IncidentTriangles(%d) error = %v, want nil", vIdx, err)
-		}
+		incidentTris := dt.IncidentTriangles(vIdx)
 		for i := 1; i < len(incidentTris); i++ {
 			ct := dt.Triangles[incidentTris[i-1]]
 			nt := dt.Triangles[incidentTris[i]]
 
-			nextVertex, err := NextVertex(ct, vIdx)
-			if err != nil {
-				t.Fatalf("NextVertex(%v %d) error = %v, want nil", ct, vIdx, err)
-			}
-			prevVertex, err := PrevVertex(nt, vIdx)
-			if err != nil {
-				t.Fatalf("PrevVertex(%v %d) error = %v, want nil", nt, vIdx, err)
-			}
-
+			nextVertex := NextVertex(ct, vIdx)
+			prevVertex := PrevVertex(nt, vIdx)
 			if nextVertex != prevVertex {
 				t.Errorf("dt.IncidentTriangles(%d) triangles %d and %d are not CCW neighbors", vIdx,
 					i-1, i)
@@ -133,6 +123,15 @@ func TestNewTriangulation_VerifyIncidentTrianglesSorted(t *testing.T) {
 }
 
 func TestIncidentTriangles(t *testing.T) {
+	assertPanic := func(dt *Triangulation, in int) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("dt.IncidentTriangles(%d) did not panic, want panic", in)
+			}
+		}()
+		dt.IncidentTriangles(in)
+	}
+
 	dt := &Triangulation{
 		Vertices:                nil,
 		Triangles:               nil,
@@ -152,26 +151,28 @@ func TestIncidentTriangles(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := dt.IncidentTriangles(tt.in)
-			if err != nil {
-				t.Fatalf("dt.IncidentTriangles(%d) error = %v, want nil", tt.in, err)
-			}
+			got := dt.IncidentTriangles(tt.in)
 			if cmp.Equal(tt.want, got) == false {
 				t.Errorf("dt.IncidentTriangles(%d) = %v, want %v", tt.in, got, tt.want)
 			}
 		})
 	}
 
-	if _, err := dt.IncidentTriangles(-1); err == nil {
-		t.Fatalf("dt.IncidentTriangles(-1) error = nil, want non-nil")
-	}
-	if _, err := dt.IncidentTriangles(len(dt.IncidentTriangleOffsets)); err == nil {
-		t.Fatalf("dt.IncidentTriangles(%d) error = nil, want non-nil",
-			len(dt.IncidentTriangleOffsets))
-	}
+	assertPanic(dt, -1)
+	assertPanic(dt, len(dt.IncidentTriangleOffsets))
+
 }
 
 func TestTriangleVertices(t *testing.T) {
+	assertPanic := func(dt *Triangulation, in int) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("dt.TriangleVertices(%d) did not panic, want panic", in)
+			}
+		}()
+		dt.TriangleVertices(in)
+	}
+
 	points := utils.GenerateRandomPoints(3, 0)
 	dt := &Triangulation{
 		Vertices: s2.PointVector{points[0], points[1], points[2]},
@@ -181,22 +182,15 @@ func TestTriangleVertices(t *testing.T) {
 	}
 
 	want := [3]s2.Point{points[0], points[1], points[2]}
-	p, err := dt.TriangleVertices(0)
-	if err != nil {
-		t.Fatalf("dt.IncidentTriangles(0) error = %v, want nil", err)
-	}
+	p := dt.TriangleVertices(0)
 	got := [3]s2.Point{p[0], p[1], p[2]}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("dt.TriangleVertices(0) mismatch (-want +got):\n%s", diff)
 	}
 
-	if _, err := dt.TriangleVertices(-1); err == nil {
-		t.Errorf("dt.TriangleVertices(-1) error = nil, want non-nil")
-	}
+	assertPanic(dt, -1)
+	assertPanic(dt, len(dt.Triangles))
 
-	if _, err := dt.TriangleVertices(1); err == nil {
-		t.Errorf("dt.TriangleVertices(1) error = nil, want non-nil")
-	}
 }
 
 func TestSortTriangleVerticesCCW(t *testing.T) {
@@ -250,39 +244,49 @@ func TestSortIncidentTriangleIndicesCCW(t *testing.T) {
 // Triangle Prev/Next vertex
 
 func TestPrevVertex(t *testing.T) {
+	assertPanic := func(tri [3]int, in int) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("PrevVertex(%v, %d) did not panic, want panic", tri, in)
+			}
+		}()
+		PrevVertex(tri, in)
+	}
+
 	tri := [3]int{1, 2, 3}
 	for i, in := range tri {
-		got, err := PrevVertex(tri, in)
-		if err != nil {
-			t.Fatalf("PrevVertex(%v, %d) error = %v, want nil", tri, in, err)
-		}
+		got := PrevVertex(tri, in)
 		want := tri[(i+2)%len(tri)]
 		if got != want {
 			t.Errorf("PrevVertex(%v, %d) = %v, want %v", tri, in, got, want)
 		}
 	}
 
-	if _, err := PrevVertex(tri, -1); err == nil {
-		t.Errorf("PrevVertex(...) should return error for vIdx not in triangle")
-	}
+	assertPanic(tri, -1)
+	assertPanic(tri, 4)
 }
 
 func TestNextVertex(t *testing.T) {
+	assertPanic := func(tri [3]int, in int) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("NextVertex(%v, %d) did not panic, want panic", tri, in)
+			}
+		}()
+		NextVertex(tri, in)
+	}
+
 	tri := [3]int{1, 2, 3}
 	for i, in := range tri {
-		got, err := NextVertex(tri, in)
-		if err != nil {
-			t.Fatalf("NextVertex(%v, %d) error = %v, want nil", tri, in, err)
-		}
+		got := NextVertex(tri, in)
 		want := tri[(i+1)%len(tri)]
 		if got != want {
 			t.Errorf("NextVertex(%v, %d) = %v, want %v", tri, in, got, want)
 		}
 	}
 
-	if _, err := NextVertex(tri, -1); err == nil {
-		t.Errorf("NextVertex(...) should return error for vIdx not in triangle")
-	}
+	assertPanic(tri, -1)
+	assertPanic(tri, 4)
 }
 
 // Benchmarks

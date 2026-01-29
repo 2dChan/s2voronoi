@@ -131,23 +131,14 @@ func TestNewDiagram_VerifyCCW(t *testing.T) {
 	vd := mustNewDiagram(t, 100)
 
 	for i := range vd.NumCells() {
-		cell, err := vd.Cell(i)
-		if err != nil {
-			t.Fatalf("vd.Cell(%d) error = %v, want nil", i, err)
-		}
+		cell := vd.Cell(i)
 
 		center := cell.Site()
 		for i := 0; i < cell.NumVertices(); i++ {
 			cIdx := i
+			c := cell.Vertex(cIdx)
 			nIdx := (i + 1) % cell.NumVertices()
-			c, err := cell.Vertex(cIdx)
-			if err != nil {
-				t.Fatalf("cell.Vertex(%d) error = %v, want nil", cIdx, err)
-			}
-			n, err := cell.Vertex(nIdx)
-			if err != nil {
-				t.Fatalf("cell.Vertex(%d) error = %v, want nil", nIdx, err)
-			}
+			n := cell.Vertex(nIdx)
 
 			angle := computeAngleCCW(c, n, center)
 			if angle <= 0 {
@@ -158,22 +149,16 @@ func TestNewDiagram_VerifyCCW(t *testing.T) {
 
 		for i := 0; i < cell.NumNeighbors(); i++ {
 			cIdx := i
+			cn := cell.Neighbor(cIdx)
+			c := cn.Site()
+
 			nIdx := (i + 1) % cell.NumNeighbors()
-			neigh, err := cell.Neighbor(cIdx)
-			if err != nil {
-				t.Fatalf("cell.Neighbor(%d) error = %v, want nil", cIdx, err)
-			}
-			c := neigh.Site()
-			neigh2, err := cell.Neighbor(nIdx)
-			if err != nil {
-				t.Fatalf("cell.Neighbor(%d) error = %v, want nil", nIdx, err)
-			}
-			n := neigh2.Site()
+			nn := cell.Neighbor(nIdx)
+			n := nn.Site()
 
 			angle := computeAngleCCW(c, n, center)
 			if angle <= 0 {
-				t.Errorf("vd.Cell(%d) Neighbors %d,%d not sorted in CCW", i,
-					cIdx, nIdx)
+				t.Errorf("vd.Cell(%d) Neighbors %d,%d not sorted in CCW", i, cIdx, nIdx)
 			}
 		}
 	}
@@ -190,32 +175,37 @@ func TestDiagram_NumCells(t *testing.T) {
 
 func TestDiagram_Cell(t *testing.T) {
 	vd := mustNewDiagram(t, 10)
-	tests := []struct {
-		name    string
-		index   int
-		wantErr bool
-	}{
-		{"valid index 0", 0, false},
-		{"valid index 5", 5, false},
-		{"valid index 9", 9, false},
-		{"negative index", -1, true},
-		{"out of range", 10, true},
-		{"large negative", -100, true},
-		{"large positive", 100, true},
+	for i := range vd.NumCells() {
+		c := vd.Cell(i)
+		want := Cell{i, vd}
+		if diff := cmp.Diff(want, c, cmp.AllowUnexported(Cell{})); diff != "" {
+			t.Errorf("vd.Cell(%d) mismatch (-want +got):\n%s", i, diff)
+		}
 	}
+}
+
+func TestDiagram_Cell_Panic(t *testing.T) {
+	vd := mustNewDiagram(t, 10)
+
+	tests := []struct {
+		name  string
+		index int
+	}{
+		{"negative index", -1},
+		{"out of range", vd.NumCells()},
+	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c, err := vd.Cell(tt.index)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Diagram.Cell(%d) error = %v, wantErr %v", tt.index, err, tt.wantErr)
-			}
-
-			want := Cell{tt.index, vd}
-			if diff := cmp.Diff(want, c, cmp.AllowUnexported(Cell{})); err == nil && diff != "" {
-				t.Errorf("Diagram.Cell(%d) mismatch (-want +got):\n%s", tt.index, diff)
-			}
+			defer func() {
+				if r := recover(); r == nil {
+					t.Errorf("vd.Cell(%d) did not panic, want panic", tt.index)
+				}
+			}()
+			vd.Cell(tt.index)
 		})
 	}
+
 }
 
 func TestTriangleCircumcenter(t *testing.T) {
@@ -243,7 +233,7 @@ func TestTriangleCircumcenter(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := triangleCircumcenter(tt.p0, tt.p1, tt.p2)
-			if got.Distance(tt.want) > 1e-9 {
+			if got.Distance(tt.want) > defaultEps {
 				t.Errorf("triangleCircumcenter(...) = %v, want %v", got, tt.want)
 			}
 		})
