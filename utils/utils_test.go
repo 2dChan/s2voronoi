@@ -36,14 +36,14 @@ func TestGenerateRandomPoints_Length(t *testing.T) {
 
 func TestGenerateRandomPoints_OnUnitSphere(t *testing.T) {
 	const (
-		cnt     = 100
-		seed    = 0
-		epsilon = 1e-12
+		cnt  = 100
+		seed = 0
+		eps  = 1e-12
 	)
 	points := GenerateRandomPoints(cnt, seed)
 	for i, p := range points {
 		norm := p.Norm()
-		if math.Abs(norm-1.0) > epsilon {
+		if math.Abs(norm-1.0) > eps {
 			t.Errorf("GenerateRandomPoints(%v, %v)[%d] point norm = %v, want ≈1", cnt, seed,
 				i, norm)
 		}
