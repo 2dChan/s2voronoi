@@ -129,12 +129,12 @@ func (t *Triangulation) IncidentTriangles(vIdx int) []int {
 
 // TriangleVertices returns the three vertices of the triangle at the given index.
 // It panics if the triangle index is out of bounds.
-func (t *Triangulation) TriangleVertices(tIdx int) [3]s2.Point {
+func (t *Triangulation) TriangleVertices(tIdx int) (s2.Point, s2.Point, s2.Point) {
 	if tIdx < 0 || tIdx >= len(t.Triangles) {
 		panic(fmt.Sprintf("TriangleVertices: tIdx %d out of bounds [0 %d)", tIdx, len(t.Triangles)))
 	}
 	tri := t.Triangles[tIdx]
-	return [3]s2.Point{t.Vertices[tri[0]], t.Vertices[tri[1]], t.Vertices[tri[2]]}
+	return t.Vertices[tri[0]], t.Vertices[tri[1]], t.Vertices[tri[2]]
 }
 
 // sortTriangleVerticesCCW sorts triangle vertices in CCW order.

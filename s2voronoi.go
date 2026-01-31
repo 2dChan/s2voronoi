@@ -85,8 +85,8 @@ func NewDiagram(sites s2.PointVector, setters ...DiagramOption) (*Diagram, error
 	}
 
 	for i := range numTriangles {
-		p := dt.TriangleVertices(i)
-		d.Vertices[i] = s2.Point{Vector: triangleCircumcenter(p[0], p[1], p[2]).Normalize()}
+		p0, p1, p2 := dt.TriangleVertices(i)
+		d.Vertices[i] = s2.Point{Vector: triangleCircumcenter(p0, p1, p2).Normalize()}
 	}
 
 	for vIdx := range dt.Vertices {

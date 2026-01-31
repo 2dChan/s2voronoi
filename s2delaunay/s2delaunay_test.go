@@ -182,8 +182,8 @@ func TestTriangleVertices(t *testing.T) {
 	}
 
 	want := [3]s2.Point{points[0], points[1], points[2]}
-	p := dt.TriangleVertices(0)
-	got := [3]s2.Point{p[0], p[1], p[2]}
+	p0, p1, p2 := dt.TriangleVertices(0)
+	got := [3]s2.Point{p0, p1, p2}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("dt.TriangleVertices(0) mismatch (-want +got):\n%s", diff)
 	}
