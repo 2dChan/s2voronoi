@@ -56,9 +56,13 @@ func TestNewDiagram_WithEps(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := NewDiagram(points, WithEps(tt.eps))
+			vd, err := NewDiagram(points, WithEps(tt.eps))
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewDiagram(..., WithEps(%v)) error = %v, wantErr %v", tt.eps, err, tt.wantErr)
+			}
+
+			if err == nil && vd.eps != tt.eps {
+				t.Errorf("NewDiagram(..., WithEps(%v)) eps = %v, want %v", tt.eps, vd.eps, tt.eps)
 			}
 		})
 	}
@@ -178,7 +182,7 @@ func TestDiagram_Cell(t *testing.T) {
 	for i := range vd.NumCells() {
 		c := vd.Cell(i)
 		want := Cell{i, vd}
-		if diff := cmp.Diff(want, c, cmp.AllowUnexported(Cell{})); diff != "" {
+		if diff := cmp.Diff(want, c, cmp.AllowUnexported(Cell{}, Diagram{})); diff != "" {
 			t.Errorf("vd.Cell(%d) mismatch (-want +got):\n%s", i, diff)
 		}
 	}
@@ -205,7 +209,77 @@ func TestDiagram_Cell_Panic(t *testing.T) {
 			vd.Cell(tt.index)
 		})
 	}
+}
 
+func TestDiagram_Relax(t *testing.T) {
+	tests := []struct {
+		name  string
+		steps int
+		size  int
+	}{
+		{"zero step", 0, 1000},
+		{"one step", 1, 1000},
+		{"multiple steps", 5, 1000},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			vd := mustNewDiagram(t, tt.size)
+			vdOld := mustNewDiagram(t, tt.size)
+
+			err := vd.Relax(tt.steps)
+			if err != nil {
+				t.Fatalf("vd.Relax(%d) error = %v, want nil", tt.steps, err)
+			}
+
+			if len(vd.Sites) != len(vdOld.Sites) {
+				t.Errorf("vd.Relax(%d) Sites count = %d, want %d", tt.steps,
+					len(vd.Sites), len(vdOld.Sites))
+			}
+			if len(vd.Vertices) != len(vdOld.Vertices) {
+				t.Errorf("vd.Relax(%d) Vertices count = %d, want %d", tt.steps,
+					len(vd.Vertices), len(vdOld.Vertices))
+			}
+			if len(vd.CellNeighbors) != len(vdOld.CellNeighbors) {
+				t.Errorf("vd.Relax(%d) CellNeighbors count = %d, want %d", tt.steps,
+					len(vd.CellNeighbors), len(vdOld.CellNeighbors))
+			}
+			if len(vd.CellVertices) != len(vdOld.CellVertices) {
+				t.Errorf("vd.Relax(%d) CellVertices count = %d, want %d", tt.steps,
+					len(vd.CellVertices), len(vdOld.CellVertices))
+			}
+			if len(vd.CellOffsets) != len(vdOld.CellOffsets) {
+				t.Errorf("vd.Relax(%d) CellOffsets count = %d, want %d", tt.steps,
+					len(vd.CellOffsets), len(vdOld.CellOffsets))
+			}
+
+			expectChange := tt.steps != 0
+			msg := "changed"
+			if expectChange {
+				msg = "not changed"
+			}
+			if cmp.Equal(vd.Sites, vdOld.Sites) == expectChange {
+				t.Errorf("vd.Relax(%d) Sites %s", tt.steps, msg)
+			}
+			if cmp.Equal(vd.Vertices, vdOld.Vertices) == expectChange {
+				t.Errorf("vd.Relax(%d) Vertices %s", tt.steps, msg)
+			}
+			if cmp.Equal(vd.CellNeighbors, vdOld.CellNeighbors) == expectChange {
+				t.Errorf("vd.Relax(%d) CellNeighbors %s", tt.steps, msg)
+			}
+			if cmp.Equal(vd.CellVertices, vdOld.CellVertices) == expectChange {
+				t.Errorf("vd.Relax(%d) CellVertices %s", tt.steps, msg)
+			}
+			if cmp.Equal(vd.CellOffsets, vdOld.CellOffsets) == expectChange {
+				t.Errorf("vd.Relax(%d) CellOffsets %s", tt.steps, msg)
+			}
+		})
+	}
+
+	vd := mustNewDiagram(t, 100)
+	if err := vd.Relax(-1); err == nil {
+		t.Errorf("vd.Relax(-1) error = nil, want non-nil")
+	}
 }
 
 func TestTriangleCircumcenter(t *testing.T) {
@@ -257,6 +331,31 @@ func BenchmarkNewDiagram(b *testing.B) {
 				}
 			}
 		})
+	}
+}
+
+func BenchmarkDiagram_Relax(b *testing.B) {
+	sizes := []int{1e+2, 1e+3, 1e+4}
+	steps := []int{1, 10, 1e+2, 1e+3}
+	for _, pointsCnt := range sizes {
+		for _, step := range steps {
+			b.Run(fmt.Sprintf("N%d Steps%d", pointsCnt, step), func(b *testing.B) {
+				points := utils.GenerateRandomPoints(pointsCnt, 0)
+				vd, err := NewDiagram(points)
+				if err != nil {
+					b.Fatalf("NewDiagram(...) error = %v, want nil", err)
+				}
+
+				b.ReportAllocs()
+				b.ResetTimer()
+				for b.Loop() {
+					err := vd.Relax(step)
+					if err != nil {
+						b.Fatalf("vd.Relax(%d) error = %v, want nil", steps, err)
+					}
+				}
+			})
+		}
 	}
 }
 
