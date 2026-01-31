@@ -101,5 +101,10 @@ func main() {
 		log.Fatal(err)
 	}
 
+	err = vd.Relax(5)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	renderDiagram(vd)
 }

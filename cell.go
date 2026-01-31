@@ -9,6 +9,7 @@ package s2voronoi
 import (
 	"fmt"
 
+	"github.com/golang/geo/r3"
 	"github.com/golang/geo/s2"
 )
 
@@ -74,4 +75,20 @@ func (c Cell) Neighbor(i int) Cell {
 	}
 	nc := c.d.Cell(c.d.CellNeighbors[start+i])
 	return nc
+}
+
+// centroid returns the centroid of the cell by averaging its vertex vectors on the unit sphere.
+func (c Cell) centroid() s2.Point {
+	num := c.NumVertices()
+	if num == 0 {
+		panic("centroid: cell has no vertices")
+	}
+
+	sum := r3.Vector{X: 0, Y: 0, Z: 0}
+	for i := range num {
+		sum = sum.Add(c.Vertex(i).Vector)
+	}
+	avg := sum.Mul(1.0 / float64(num))
+
+	return s2.Point{Vector: avg.Normalize()}
 }
