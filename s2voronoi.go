@@ -32,6 +32,8 @@ type Diagram struct {
 	CellNeighbors []int
 	// CellOffsets contains offsets for slicing cell data in a CSR-like format.
 	CellOffsets []int
+
+	eps float64
 }
 
 // DiagramOptions holds configuration options for Voronoi diagram creation.
@@ -82,6 +84,8 @@ func NewDiagram(sites s2.PointVector, setters ...DiagramOption) (*Diagram, error
 		CellVertices:  dt.IncidentTriangleIndices,
 		CellNeighbors: make([]int, numNeighbors),
 		CellOffsets:   dt.IncidentTriangleOffsets,
+
+		eps: opts.Eps,
 	}
 
 	for i := range numTriangles {
@@ -114,6 +118,31 @@ func (d *Diagram) Cell(i int) Cell {
 	}
 
 	return Cell{idx: i, d: d}
+}
+
+// Relax performs Lloyd's relaxation by moving sites to centroids and recomputing the diagram.
+// NOTE: Allocates excessive memory by creating new Diagram per step
+// TODO: Optimize for reuse memory
+func (d *Diagram) Relax(steps int) error {
+	if steps < 0 {
+		return fmt.Errorf("Relax: steps must be non-negative, got %d", steps)
+	}
+
+	for range steps {
+		for i := range d.NumCells() {
+			cell := d.Cell(i)
+			d.Sites[i] = cell.centroid()
+		}
+
+		nd, err := NewDiagram(d.Sites, WithEps(d.eps))
+		if err != nil {
+			return err
+		}
+
+		*d = *nd
+	}
+
+	return nil
 }
 
 // triangleCircumcenter computes the circumcenter of a triangle on the sphere.

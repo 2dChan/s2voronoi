@@ -5,8 +5,11 @@
 package s2voronoi
 
 import (
+	"math"
 	"testing"
 
+	"github.com/golang/geo/r3"
+	"github.com/golang/geo/s2"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -127,4 +130,48 @@ func TestCell_Neighbor(t *testing.T) {
 		assertPanic(c, -1)
 		assertPanic(c, c.NumNeighbors())
 	}
+}
+
+func TestCell_centroid(t *testing.T) {
+	vd := mustNewDiagram(t, 100)
+	for i := range vd.NumCells() {
+		c := vd.Cell(i)
+		centroid := c.centroid()
+
+		norm := centroid.Norm()
+		if math.Abs(norm-1.0) > 1e-10 {
+			t.Errorf("c.centroid() norm = %v, want ~1.0", norm)
+		}
+
+		sum := r3.Vector{X: 0, Y: 0, Z: 0}
+		for j := range c.NumVertices() {
+			sum = sum.Add(c.Vertex(j).Vector)
+		}
+		avg := sum.Mul(1.0 / float64(c.NumVertices()))
+		expected := s2.Point{Vector: avg.Normalize()}
+
+		if centroid.Distance(expected) > defaultEps {
+			t.Errorf("c.centroid() = %v, want %v", centroid, expected)
+		}
+	}
+}
+
+func TestCell_centroid_Panic(t *testing.T) {
+	d := &Diagram{
+		Sites:         []s2.Point{s2.PointFromCoords(1, 0, 0)},
+		Vertices:      []s2.Point{},
+		CellNeighbors: []int{},
+		CellVertices:  []int{},
+		CellOffsets:   []int{0, 0},
+		eps:           1e-10,
+	}
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("c.centroid() did not panic, want panic")
+		}
+	}()
+
+	c := Cell{idx: 0, d: d}
+	c.centroid()
 }
