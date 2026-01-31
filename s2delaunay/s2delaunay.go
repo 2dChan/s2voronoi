@@ -58,11 +58,11 @@ func WithEps(eps float64) TriangulationOption {
 // It returns an error if the triangulation cannot be constructed.
 func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (*Triangulation,
 	error) {
-	opts := TriangulationOptions{
+	opts := &TriangulationOptions{
 		Eps: defaultEps,
 	}
 	for _, set := range setters {
-		err := set(&opts)
+		err := set(opts)
 		if err != nil {
 			return nil, err
 		}
