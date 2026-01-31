@@ -59,11 +59,11 @@ func WithEps(eps float64) DiagramOption {
 // The sites must lie on the unit sphere, there must be at least 4 sites, and they must not be coplanar.
 // It returns an error if the diagram cannot be constructed.
 func NewDiagram(sites s2.PointVector, setters ...DiagramOption) (*Diagram, error) {
-	opts := DiagramOptions{
+	opts := &DiagramOptions{
 		Eps: defaultEps,
 	}
 	for _, set := range setters {
-		err := set(&opts)
+		err := set(opts)
 		if err != nil {
 			return nil, err
 		}
