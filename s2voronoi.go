@@ -85,8 +85,8 @@ func NewDiagram(sites s2.PointVector, setters ...DiagramOption) (*Diagram, error
 	}
 
 	for i := range numTriangles {
-		p0, p1, p2 := dt.TriangleVertices(i)
-		d.Vertices[i] = s2.Point{Vector: triangleCircumcenter(p0, p1, p2).Normalize()}
+		a, b, c := dt.TriangleVertices(i)
+		d.Vertices[i] = s2.Point{Vector: triangleCircumcenter(a, b, c).Normalize()}
 	}
 
 	for vIdx := range dt.Vertices {
@@ -117,13 +117,13 @@ func (d *Diagram) Cell(i int) Cell {
 }
 
 // triangleCircumcenter computes the circumcenter of a triangle on the sphere.
-func triangleCircumcenter(p1, p2, p3 s2.Point) s2.Point {
-	v1 := p1.Sub(p2.Vector)
-	v2 := p2.Sub(p3.Vector)
+func triangleCircumcenter(a, b, c s2.Point) s2.Point {
+	v1 := a.Sub(b.Vector)
+	v2 := b.Sub(c.Vector)
 
 	circumcenter := v1.Cross(v2)
 
-	if circumcenter.Dot(p1.Vector.Add(p2.Vector).Add(p3.Vector)) < 0 {
+	if circumcenter.Dot(a.Vector.Add(b.Vector).Add(c.Vector)) < 0 {
 		circumcenter = circumcenter.Mul(-1)
 	}
 

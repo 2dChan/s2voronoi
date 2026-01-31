@@ -94,9 +94,9 @@ func TestNewTriangulation_VerifyTrianglesCCW(t *testing.T) {
 	dt := mustNewTriangulation(t, 100)
 
 	for i, tri := range dt.Triangles {
-		p0, p1, p2 := dt.Vertices[tri[0]], dt.Vertices[tri[1]], dt.Vertices[tri[2]]
-		cross := p1.Sub(p0.Vector).Cross(p2.Sub(p0.Vector))
-		dot := cross.Dot(p0.Vector)
+		a, b, c := dt.Vertices[tri[0]], dt.Vertices[tri[1]], dt.Vertices[tri[2]]
+		cross := b.Sub(a.Vector).Cross(c.Sub(a.Vector))
+		dot := cross.Dot(a.Vector)
 		if dot < 0 {
 			t.Errorf("dt.Triangles[%d] vertices are not sorted in CCW", i)
 		}
@@ -182,8 +182,8 @@ func TestTriangleVertices(t *testing.T) {
 	}
 
 	want := [3]s2.Point{points[0], points[1], points[2]}
-	p0, p1, p2 := dt.TriangleVertices(0)
-	got := [3]s2.Point{p0, p1, p2}
+	a, b, c := dt.TriangleVertices(0)
+	got := [3]s2.Point{a, b, c}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("dt.TriangleVertices(0) mismatch (-want +got):\n%s", diff)
 	}

@@ -210,9 +210,9 @@ func TestDiagram_Cell_Panic(t *testing.T) {
 
 func TestTriangleCircumcenter(t *testing.T) {
 	tests := []struct {
-		name       string
-		p0, p1, p2 s2.Point
-		want       s2.Point
+		name    string
+		a, b, c s2.Point
+		want    s2.Point
 	}{
 		{
 			"xyz orthonormal",
@@ -232,7 +232,7 @@ func TestTriangleCircumcenter(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := triangleCircumcenter(tt.p0, tt.p1, tt.p2)
+			got := triangleCircumcenter(tt.a, tt.b, tt.c)
 			if got.Distance(tt.want) > defaultEps {
 				t.Errorf("triangleCircumcenter(...) = %v, want %v", got, tt.want)
 			}

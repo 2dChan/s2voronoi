@@ -139,9 +139,9 @@ func (t *Triangulation) TriangleVertices(tIdx int) (s2.Point, s2.Point, s2.Point
 
 // sortTriangleVerticesCCW sorts triangle vertices in CCW order.
 func sortTriangleVerticesCCW(t *[3]int, v s2.PointVector) {
-	p0, p1, p2 := v[t[0]], v[t[1]], v[t[2]]
-	norm := p1.Sub(p0.Vector).Cross(p2.Sub(p0.Vector))
-	if norm.Dot(p0.Vector) < 0 {
+	a, b, c := v[t[0]], v[t[1]], v[t[2]]
+	norm := b.Sub(a.Vector).Cross(c.Sub(a.Vector))
+	if norm.Dot(a.Vector) < 0 {
 		t[1], t[2] = t[2], t[1]
 	}
 }
