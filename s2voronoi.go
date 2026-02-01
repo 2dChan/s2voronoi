@@ -33,6 +33,7 @@ type Diagram struct {
 	// CellOffsets contains offsets for slicing cell data in a CSR-like format.
 	CellOffsets []int
 
+	// eps is the numerical precision epsilon used in Voronoi diagram computations.
 	eps float64
 }
 
