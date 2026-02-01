@@ -7,6 +7,7 @@
 package s2voronoi
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/2dChan/s2voronoi/s2delaunay"
@@ -62,6 +63,10 @@ func WithEps(eps float64) DiagramOption {
 // The sites must lie on the unit sphere, there must be at least 4 sites, and they must not be coplanar.
 // It returns an error if the diagram cannot be constructed.
 func NewDiagram(sites s2.PointVector, setters ...DiagramOption) (*Diagram, error) {
+	if len(sites) < 4 {
+		return nil, errors.New("NewDiagram: insufficient sites for diagram minimum 4 required")
+	}
+
 	opts := &DiagramOptions{
 		Eps: defaultEps,
 	}
