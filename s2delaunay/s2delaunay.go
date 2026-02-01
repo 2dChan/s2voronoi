@@ -60,7 +60,7 @@ func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (
 	error) {
 	if len(vertices) < 4 {
 		return nil,
-			errors.New("NewTriangulation: insufficient vertices for triangulation minimum 4 required")
+			errors.New("NewTriangulation: insufficient vertices for triangulation, minimum 4 required")
 	}
 
 	opts := &TriangulationOptions{
