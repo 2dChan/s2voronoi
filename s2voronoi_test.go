@@ -336,20 +336,23 @@ func BenchmarkNewDiagram(b *testing.B) {
 
 func BenchmarkDiagram_Relax(b *testing.B) {
 	sizes := []int{1e+2, 1e+3, 1e+4}
-	steps := []int{1, 10, 1e+2, 1e+3}
+	steps := []int{1, 10}
 	for _, pointsCnt := range sizes {
 		for _, step := range steps {
 			b.Run(fmt.Sprintf("N%d Steps%d", pointsCnt, step), func(b *testing.B) {
 				points := utils.GenerateRandomPoints(pointsCnt, 0)
-				vd, err := NewDiagram(points)
-				if err != nil {
-					b.Fatalf("NewDiagram(...) error = %v, want nil", err)
-				}
 
 				b.ReportAllocs()
 				b.ResetTimer()
 				for b.Loop() {
-					err := vd.Relax(step)
+					b.StopTimer()
+					vd, err := NewDiagram(points)
+					if err != nil {
+						b.Fatalf("NewDiagram(...) error = %v, want nil", err)
+					}
+					b.StartTimer()
+
+					err = vd.Relax(step)
 					if err != nil {
 						b.Fatalf("vd.Relax(%d) error = %v, want nil", step, err)
 					}
