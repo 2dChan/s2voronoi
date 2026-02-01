@@ -142,7 +142,7 @@ func TestCell_centroid(t *testing.T) {
 			sum = sum.Add(c.Vertex(j).Vector)
 		}
 		avg := sum.Mul(1.0 / float64(c.NumVertices()))
-		expected := s2.Point{Vector: avg.Normalize()}
+		expected := s2.Point{Vector: avg}
 
 		if centroid.Distance(expected) > defaultEps {
 			t.Errorf("c.centroid() = %v, want %v", centroid, expected)
