@@ -58,6 +58,11 @@ func WithEps(eps float64) TriangulationOption {
 // It returns an error if the triangulation cannot be constructed.
 func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (*Triangulation,
 	error) {
+	if len(vertices) < 4 {
+		return nil,
+			errors.New("NewTriangulation: insufficient vertices for triangulation minimum 4 required")
+	}
+
 	opts := &TriangulationOptions{
 		Eps: defaultEps,
 	}
@@ -67,11 +72,8 @@ func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (
 			return nil, err
 		}
 	}
+
 	numVertices := len(vertices)
-	if numVertices < 4 {
-		return nil,
-			errors.New("NewTriangulation: insufficient vertices for triangulation minimum 4 required")
-	}
 	numTriangles := 2 * (numVertices - 2)
 	t := &Triangulation{
 		Vertices:                vertices,
@@ -79,6 +81,7 @@ func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (
 		IncidentTriangleIndices: make([]int, numTriangles*3),
 		IncidentTriangleOffsets: make([]int, numVertices+1),
 	}
+
 	r3vertices := make([]r3.Vector, numVertices)
 	for i, p := range vertices {
 		r3vertices[i] = p.Vector
@@ -89,6 +92,7 @@ func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (
 		return nil,
 			errors.New("NewTriangulation: inconsistent number of indices returned from QuickHull")
 	}
+
 	for _, idx := range ch.Indices {
 		t.IncidentTriangleOffsets[idx+1]++
 	}
@@ -111,6 +115,7 @@ func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (
 		incidentTriangles := t.IncidentTriangles(i)
 		sortIncidentTriangleIndicesCCW(i, incidentTriangles, t.Triangles)
 	}
+
 	return t, nil
 }
 
