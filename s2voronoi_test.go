@@ -32,7 +32,11 @@ func TestWithEps(t *testing.T) {
 			opt := WithEps(tt.eps)
 			err := opt(opts)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("WithEps(%v) error = %v, wantErr %v", tt.eps, err, tt.wantErr)
+				errValMsg := "nil"
+				if tt.wantErr {
+					errValMsg = "non-nil"
+				}
+				t.Errorf("WithEps(%v) error = %v, want %v", tt.eps, err, errValMsg)
 			}
 			if err == nil && opts.Eps != tt.eps {
 				t.Errorf("WithEps(%v) opts.Eps = %v, want %v", tt.eps, opts.Eps, tt.eps)
@@ -50,7 +54,9 @@ func TestNewDiagram_WithEps(t *testing.T) {
 		eps     float64
 		wantErr bool
 	}{
-		{"eps positive small", 0.01, false},
+		{"eps default", defaultEps, false},
+		{"eps positive", 0.01, false},
+		{"eps large", 1, true},
 		{"eps zero", 0, true},
 		{"eps negative", -0.01, true},
 	}
@@ -58,7 +64,11 @@ func TestNewDiagram_WithEps(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			vd, err := NewDiagram(points, WithEps(tt.eps))
 			if (err != nil) != tt.wantErr {
-				t.Errorf("NewDiagram(..., WithEps(%v)) error = %v, wantErr %v", tt.eps, err, tt.wantErr)
+				errValMsg := "nil"
+				if tt.wantErr {
+					errValMsg = "non-nil"
+				}
+				t.Errorf("NewDiagram(..., WithEps(%v)) error = %v, want %s", tt.eps, err, errValMsg)
 			}
 
 			if err == nil && vd.eps != tt.eps {

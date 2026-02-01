@@ -34,7 +34,11 @@ func TestWithEps(t *testing.T) {
 			opt := WithEps(tt.eps)
 			err := opt(opts)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("WithEps(%v) error = %v, wantErr %v", tt.eps, err, tt.wantErr)
+				errValMsg := "nil"
+				if tt.wantErr {
+					errValMsg = "non-nil"
+				}
+				t.Errorf("WithEps(%v) error = %v, want %v", tt.eps, err, errValMsg)
 			}
 			if err == nil && opts.Eps != tt.eps {
 				t.Errorf("WithEps(%v) opts.Eps = %v, want %v", tt.eps, opts.Eps, tt.eps)
@@ -52,7 +56,9 @@ func TestNewTriangulation_WithEps(t *testing.T) {
 		eps     float64
 		wantErr bool
 	}{
+		{"eps default", defaultEps, false},
 		{"eps positive", 0.01, false},
+		{"eps large", 1, true},
 		{"eps zero", 0, true},
 		{"eps negative", -0.01, true},
 	}
