@@ -60,7 +60,11 @@ func TestNewTriangulation_WithEps(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := NewTriangulation(points, WithEps(tt.eps))
 			if (err != nil) != tt.wantErr {
-				t.Errorf("NewTriangulation(..., WithEps(%v)) error = %v, wantErr %v", tt.eps, err, tt.wantErr)
+				errValMsg := "nil"
+				if tt.wantErr {
+					errValMsg = "non-nil"
+				}
+				t.Errorf("NewTriangulation(..., WithEps(%v)) error = %v, want %s", tt.eps, err, errValMsg)
 			}
 		})
 	}
