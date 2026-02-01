@@ -5,7 +5,6 @@
 package s2voronoi
 
 import (
-	"math"
 	"testing"
 
 	"github.com/golang/geo/r3"
@@ -137,11 +136,6 @@ func TestCell_centroid(t *testing.T) {
 	for i := range vd.NumCells() {
 		c := vd.Cell(i)
 		centroid := c.centroid()
-
-		norm := centroid.Norm()
-		if math.Abs(norm-1.0) > 1e-10 {
-			t.Errorf("c.centroid() norm = %v, want ~1.0", norm)
-		}
 
 		sum := r3.Vector{X: 0, Y: 0, Z: 0}
 		for j := range c.NumVertices() {

@@ -131,7 +131,7 @@ func (d *Diagram) Relax(steps int) error {
 	for range steps {
 		for i := range d.NumCells() {
 			cell := d.Cell(i)
-			d.Sites[i] = cell.centroid()
+			d.Sites[i] = s2.Point{Vector: cell.centroid().Normalize()}
 		}
 
 		nd, err := NewDiagram(d.Sites, WithEps(d.eps))

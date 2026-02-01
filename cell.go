@@ -88,7 +88,6 @@ func (c Cell) centroid() s2.Point {
 	for i := range num {
 		sum = sum.Add(c.Vertex(i).Vector)
 	}
-	avg := sum.Mul(1.0 / float64(num))
 
-	return s2.Point{Vector: avg.Normalize()}
+	return s2.Point{Vector: sum.Mul(1.0 / float64(num))}
 }
