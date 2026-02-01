@@ -275,10 +275,53 @@ func TestDiagram_Relax(t *testing.T) {
 			}
 		})
 	}
+}
 
-	vd := mustNewDiagram(t, 100)
-	if err := vd.Relax(-1); err == nil {
-		t.Errorf("vd.Relax(-1) error = nil, want non-nil")
+func TestDiagram_Relax_BrokenData(t *testing.T) {
+	tests := []struct {
+		name    string
+		diagram *Diagram
+		steps   int
+	}{
+		{
+			name:    "negative steps",
+			diagram: mustNewDiagram(t, 100),
+			steps:   -1,
+		},
+		{
+			name:    "empty diagram",
+			diagram: &Diagram{},
+			steps:   1,
+		},
+		{
+			name: "diagram with single site",
+			diagram: &Diagram{
+				Sites:         utils.GenerateRandomPoints(1, 0),
+				eps:           0.01,
+				Vertices:      []s2.Point{s2.PointFromCoords(1, 0, 0)},
+				CellNeighbors: []int{},
+				CellVertices:  []int{0},
+				CellOffsets:   []int{0, 1},
+			},
+			steps: 1,
+		},
+		{
+			name: "negative eps",
+			diagram: func() *Diagram {
+				vd := mustNewDiagram(t, 100)
+				vd.eps = -1
+				return vd
+			}(),
+			steps: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.diagram.Relax(tt.steps)
+			if err == nil {
+				t.Errorf("tt.diagram.Relax(%v) error = nil, want non-nil", tt.steps)
+			}
+		})
 	}
 }
 
