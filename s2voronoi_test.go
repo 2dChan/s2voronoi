@@ -351,7 +351,7 @@ func BenchmarkDiagram_Relax(b *testing.B) {
 				for b.Loop() {
 					err := vd.Relax(step)
 					if err != nil {
-						b.Fatalf("vd.Relax(%d) error = %v, want nil", steps, err)
+						b.Fatalf("vd.Relax(%d) error = %v, want nil", step, err)
 					}
 				}
 			})
