@@ -64,7 +64,7 @@ func WithEps(eps float64) DiagramOption {
 // It returns an error if the diagram cannot be constructed.
 func NewDiagram(sites s2.PointVector, setters ...DiagramOption) (*Diagram, error) {
 	if len(sites) < 4 {
-		return nil, errors.New("NewDiagram: insufficient sites for diagram minimum 4 required")
+		return nil, errors.New("NewDiagram: insufficient sites for diagram, minimum 4 required")
 	}
 
 	opts := &DiagramOptions{
