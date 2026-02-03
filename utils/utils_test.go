@@ -27,8 +27,7 @@ func TestGenerateRandomPoints_Length(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			points := GenerateRandomPoints(tt.cnt, tt.seed)
 			if len(points) != tt.cnt {
-				t.Errorf("GenerateRandomPoints(%v, %v) len = %v, want %v", tt.cnt, tt.seed,
-					len(points), tt.cnt)
+				t.Errorf("GenerateRandomPoints(%v, %v) len = %v, want %v", tt.cnt, tt.seed, len(points), tt.cnt)
 			}
 		})
 	}
@@ -44,8 +43,7 @@ func TestGenerateRandomPoints_OnUnitSphere(t *testing.T) {
 	for i, p := range points {
 		norm := p.Norm()
 		if math.Abs(norm-1.0) > eps {
-			t.Errorf("GenerateRandomPoints(%v, %v)[%d] point norm = %v, want ≈1", cnt, seed,
-				i, norm)
+			t.Errorf("GenerateRandomPoints(%v, %v)[%d] point norm = %v, want ≈1", cnt, seed, i, norm)
 		}
 	}
 }

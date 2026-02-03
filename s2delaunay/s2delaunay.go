@@ -56,8 +56,7 @@ func WithEps(eps float64) TriangulationOption {
 // NewTriangulation creates a Delaunay triangulation from the given vertices.
 // The vertices must lie on the unit sphere, there must be at least 4 vertices, and they must not be coplanar.
 // It returns an error if the triangulation cannot be constructed.
-func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (*Triangulation,
-	error) {
+func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (*Triangulation, error) {
 	if len(vertices) < 4 {
 		return nil,
 			errors.New("NewTriangulation: insufficient vertices for triangulation, minimum 4 required")
@@ -89,8 +88,7 @@ func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (
 	qh := new(quickhull.QuickHull)
 	ch := qh.ConvexHull(r3vertices, true, true, opts.Eps)
 	if len(ch.Indices) != numTriangles*3 {
-		return nil,
-			errors.New("NewTriangulation: inconsistent number of indices returned from QuickHull")
+		return nil, errors.New("NewTriangulation: inconsistent number of indices returned from QuickHull")
 	}
 
 	for _, idx := range ch.Indices {
@@ -124,8 +122,8 @@ func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (
 // It panics if the vertex index is out of range.
 func (t *Triangulation) IncidentTriangles(vIdx int) []int {
 	if vIdx < 0 || vIdx+1 >= len(t.IncidentTriangleOffsets) {
-		panic(fmt.Sprintf("IncidentTriangles: vIdx %d out of range [0 %d)", vIdx,
-			len(t.IncidentTriangleOffsets)-1))
+		right := len(t.IncidentTriangleOffsets) - 1
+		panic(fmt.Sprintf("IncidentTriangles: vIdx %d out of range [0 %d)", vIdx, right))
 	}
 	start := t.IncidentTriangleOffsets[vIdx]
 	end := t.IncidentTriangleOffsets[vIdx+1]

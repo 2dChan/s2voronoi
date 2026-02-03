@@ -125,8 +125,7 @@ func TestNewTriangulation_VerifyIncidentTrianglesSorted(t *testing.T) {
 			nextVertex := NextVertex(ct, vIdx)
 			prevVertex := PrevVertex(nt, vIdx)
 			if nextVertex != prevVertex {
-				t.Errorf("dt.IncidentTriangles(%d) triangles %d and %d are not CCW neighbors", vIdx,
-					i-1, i)
+				t.Errorf("dt.IncidentTriangles(%d) triangles %d and %d are not CCW neighbors", vIdx, i-1, i)
 			}
 		}
 	}
