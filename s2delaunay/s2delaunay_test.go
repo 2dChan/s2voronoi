@@ -132,7 +132,7 @@ func TestNewTriangulation_VerifyIncidentTrianglesSorted(t *testing.T) {
 	}
 }
 
-func TestIncidentTriangles(t *testing.T) {
+func TestTriangulation_IncidentTriangles(t *testing.T) {
 	assertPanic := func(dt *Triangulation, in int) {
 		defer func() {
 			if r := recover(); r == nil {
@@ -173,7 +173,7 @@ func TestIncidentTriangles(t *testing.T) {
 
 }
 
-func TestTriangleVertices(t *testing.T) {
+func TestTriangulation_TriangleVertices(t *testing.T) {
 	assertPanic := func(dt *Triangulation, in int) {
 		defer func() {
 			if r := recover(); r == nil {

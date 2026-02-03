@@ -115,7 +115,7 @@ func TestDiagram_Invariants(t *testing.T) {
 	}
 }
 
-func TestNewTriangulation_DegenerateInput(t *testing.T) {
+func TestNewDiagram_DegenerateInput(t *testing.T) {
 	// TODO: Add more tests for broken or invalid scenarios.
 	points := utils.GenerateRandomPoints(3, 0)
 	if _, err := NewDiagram(points); err == nil {
