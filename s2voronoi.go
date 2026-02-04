@@ -128,7 +128,6 @@ func (d *Diagram) Cell(i int) Cell {
 
 // Relax performs Lloyd's relaxation by moving sites to centroids and recomputing the diagram.
 // NOTE: Allocates excessive memory by creating new Diagram per step
-// TODO: Optimize for reuse memory
 func (d *Diagram) Relax(steps int) error {
 	if steps < 0 {
 		return fmt.Errorf("Relax: steps must be non-negative, got %d", steps)
@@ -140,6 +139,7 @@ func (d *Diagram) Relax(steps int) error {
 			d.Sites[i] = s2.Point{Vector: cell.centroid().Normalize()}
 		}
 
+		// TODO: Optimize for reuse memory
 		nd, err := NewDiagram(d.Sites, WithEps(d.eps))
 		if err != nil {
 			return err
