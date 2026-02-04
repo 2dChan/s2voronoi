@@ -6,6 +6,7 @@ package main
 
 import (
 	"log"
+	"math"
 	"os"
 
 	"github.com/2dChan/s2voronoi"
@@ -21,16 +22,9 @@ const (
 	width  = 1500
 	height = width / 2
 
-	style     = "fill:rgb(255,255,255);stroke:rgb(170,170,170);stroke-width:1;stroke-opacity:1.0"
-	siteStyle = "fill:rgb(255,0,0)"
+	polygonStyle = "fill:rgb(255,255,255);stroke:rgb(170,170,170);stroke-width:1;stroke-opacity:1.0"
+	siteStyle    = "fill:rgb(255,0,0)"
 )
-
-func Abs(a int) int {
-	if a > 0 {
-		return a
-	}
-	return -a
-}
 
 func PointToScreen(p s2.Point) (int, int) {
 	xScale := float64(width)
@@ -60,28 +54,31 @@ func renderDiagram(vd *s2voronoi.Diagram) {
 	canvas.Start(width, height)
 	canvas.Rect(0, 0, width, height, "fill:rgb(255,255,255)")
 
+	xPoints := make([]int, 0)
+	yPoints := make([]int, 0)
 	for i := range vd.NumCells() {
 		cell := vd.Cell(i)
-		numPoints := cell.NumVertices()
-		xPoints := make([]int, numPoints)
-		yPoints := make([]int, numPoints)
+		xPoints := xPoints[:0]
+		yPoints := yPoints[:0]
 
 		draw := true
-		v := cell.Vertex(0)
-		x0, _ := PointToScreen(v)
-		for j := range numPoints {
-			v := cell.Vertex(j)
-
-			xPoints[j], yPoints[j] = PointToScreen(v)
-			if Abs(x0-xPoints[j]) > width/2 {
+		sLng := s2.LatLngFromPoint(cell.Site()).Lng.Radians()
+		for j := range cell.NumVertices() {
+			vert := cell.Vertex(j)
+			vLng := s2.LatLngFromPoint(vert).Lng.Radians()
+			if math.Abs(vLng-sLng) > math.Pi {
 				draw = false
 				break
 			}
+
+			x, y := PointToScreen(vert)
+			xPoints = append(xPoints, x)
+			yPoints = append(yPoints, y)
 		}
 
-		// Skip drawing boundary polygons
+		// Skip polygons that may cross the antimeridian to avoid rendering issues
 		if draw {
-			canvas.Polygon(xPoints, yPoints, style)
+			canvas.Polygon(xPoints, yPoints, polygonStyle)
 		}
 	}
 
@@ -95,13 +92,19 @@ func renderDiagram(vd *s2voronoi.Diagram) {
 }
 
 func main() {
-	points := utils.GenerateRandomPoints(1000, 0)
+	const (
+		numPoints  = 1000
+		seed       = 0
+		relaxSteps = 5
+	)
+
+	points := utils.GenerateRandomPoints(numPoints, seed)
 	vd, err := s2voronoi.NewDiagram(points)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = vd.Relax(5)
+	err = vd.Relax(relaxSteps)
 	if err != nil {
 		log.Fatal(err)
 	}

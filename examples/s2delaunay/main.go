@@ -6,6 +6,7 @@ package main
 
 import (
 	"log"
+	"math"
 	"os"
 
 	"github.com/2dChan/s2voronoi/s2delaunay"
@@ -18,19 +19,12 @@ const (
 	filename = "delaunay.svg"
 
 	// PlateCarreeProjection
-	width  = 500
+	width  = 1500
 	height = width / 2
 
-	style     = "fill:rgb(255,255,255);stroke:rgb(170,170,170);stroke-width:1;stroke-opacity:1.0"
-	siteStyle = "fill:rgb(0,0,255)"
+	polygonStyle = "fill:rgb(255,255,255);stroke:rgb(170,170,170);stroke-width:1;stroke-opacity:1.0"
+	siteStyle    = "fill:rgb(0,0,255)"
 )
-
-func Abs(a int) int {
-	if a > 0 {
-		return a
-	}
-	return -a
-}
 
 func PointToScreen(p s2.Point) (int, int) {
 	xScale := float64(width)
@@ -60,25 +54,31 @@ func renderTriangulation(dt *s2delaunay.Triangulation) {
 	canvas.Start(width, height)
 	canvas.Rect(0, 0, width, height, "fill:rgb(255,255,255)")
 
+	xPoints := make([]int, 0)
+	yPoints := make([]int, 0)
 	for _, tri := range dt.Triangles {
-		pointsCnt := len(tri)
-		xPoints := make([]int, pointsCnt)
-		yPoints := make([]int, pointsCnt)
+		xPoints = xPoints[:0]
+		yPoints = yPoints[:0]
 
 		draw := true
-		x0, _ := PointToScreen(dt.Vertices[tri[0]])
-		for i, id := range tri {
-			xPoints[i], yPoints[i] = PointToScreen(dt.Vertices[id])
-
-			if Abs(x0-xPoints[i]) > width/2 {
+		v0 := dt.Vertices[tri[0]]
+		lng0 := s2.LatLngFromPoint(v0).Lng.Radians()
+		for _, id := range tri {
+			v := dt.Vertices[id]
+			lng := s2.LatLngFromPoint(v).Lng.Radians()
+			if math.Abs(lng0-lng) > math.Pi {
 				draw = false
 				break
 			}
+
+			x, y := PointToScreen(v)
+			xPoints = append(xPoints, x)
+			yPoints = append(yPoints, y)
 		}
 
-		// Skip drawing boundary polygons
+		// Skip polygons that may cross the antimeridian to avoid rendering issues
 		if draw {
-			canvas.Polygon(xPoints, yPoints, style)
+			canvas.Polygon(xPoints, yPoints, polygonStyle)
 		}
 	}
 
@@ -90,7 +90,12 @@ func renderTriangulation(dt *s2delaunay.Triangulation) {
 }
 
 func main() {
-	points := utils.GenerateRandomPoints(100, 0)
+	const (
+		numPoints = 1000
+		seed      = 0
+	)
+
+	points := utils.GenerateRandomPoints(numPoints, seed)
 	dt, err := s2delaunay.NewTriangulation(points)
 	if err != nil {
 		log.Fatal(err)
