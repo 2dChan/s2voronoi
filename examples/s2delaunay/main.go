@@ -28,7 +28,7 @@ const (
 
 func PointToScreen(p s2.Point) (int, int) {
 	xScale := float64(width)
-	proj := s2.NewPlateCarreeProjection(xScale)
+	proj := s2.NewMercatorProjection(xScale)
 
 	r2p := proj.Project(p)
 
