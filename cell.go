@@ -48,7 +48,7 @@ func (c Cell) Vertex(i int) s2.Point {
 	start := c.d.CellOffsets[c.idx]
 	end := c.d.CellOffsets[c.idx+1]
 	if i < 0 || i >= end-start {
-		panic(fmt.Sprintf("Vertex: index %d out of range [0 %d)", i, end-start))
+		panic(fmt.Sprintf("s2voronoi: vertex index %d out of range [0 %d)", i, end-start))
 	}
 	return c.d.Vertices[c.d.CellVertices[start+i]]
 }
@@ -71,7 +71,7 @@ func (c Cell) Neighbor(i int) Cell {
 	start := c.d.CellOffsets[c.idx]
 	end := c.d.CellOffsets[c.idx+1]
 	if i < 0 || i >= end-start {
-		panic(fmt.Sprintf("Neighbor: index %d out of range [0 %d)", i, end-start))
+		panic(fmt.Sprintf("s2voronoi: neighbor index %d out of range [0 %d)", i, end-start))
 	}
 	nc := c.d.Cell(c.d.CellNeighbors[start+i])
 	return nc
@@ -81,7 +81,7 @@ func (c Cell) Neighbor(i int) Cell {
 func (c Cell) centroid() s2.Point {
 	num := c.NumVertices()
 	if num == 0 {
-		panic("centroid: cell has no vertices")
+		panic("s2voronoi: centroid: cell has no vertices")
 	}
 
 	sum := r3.Vector{X: 0, Y: 0, Z: 0}

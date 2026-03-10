@@ -51,7 +51,7 @@ type DiagramOption func(*DiagramOptions) error
 func WithEps(eps float64) DiagramOption {
 	return func(o *DiagramOptions) error {
 		if eps <= 0 {
-			return fmt.Errorf("WithEps: eps must be positive got %v", eps)
+			return fmt.Errorf("s2voronoi: eps must be positive got %v", eps)
 
 		}
 		o.Eps = eps
@@ -64,7 +64,7 @@ func WithEps(eps float64) DiagramOption {
 // It returns an error if the diagram cannot be constructed.
 func NewDiagram(sites s2.PointVector, setters ...DiagramOption) (*Diagram, error) {
 	if len(sites) < 4 {
-		return nil, errors.New("NewDiagram: insufficient sites for diagram, minimum 4 required")
+		return nil, errors.New("s2voronoi: insufficient sites for diagram, minimum 4 required")
 	}
 
 	opts := &DiagramOptions{
@@ -120,7 +120,7 @@ func (d *Diagram) NumCells() int {
 // It panics if the index is out of range.
 func (d *Diagram) Cell(i int) Cell {
 	if i < 0 || i >= len(d.Sites) {
-		panic(fmt.Sprintf("Cell: index %d out of range [0, %d)", i, len(d.Sites)))
+		panic(fmt.Sprintf("s2voronoi: cell index %d out of range [0, %d)", i, len(d.Sites)))
 	}
 
 	return Cell{idx: i, d: d}
@@ -130,7 +130,7 @@ func (d *Diagram) Cell(i int) Cell {
 // NOTE: Allocates excessive memory by creating new Diagram per step
 func (d *Diagram) Relax(steps int) error {
 	if steps < 0 {
-		return fmt.Errorf("Relax: steps must be non-negative, got %d", steps)
+		return fmt.Errorf("s2voronoi: relax steps must be non-negative, got %d", steps)
 	}
 
 	for range steps {
