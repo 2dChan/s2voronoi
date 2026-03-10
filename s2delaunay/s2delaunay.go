@@ -46,7 +46,7 @@ type TriangulationOption func(*TriangulationOptions) error
 func WithEps(eps float64) TriangulationOption {
 	return func(o *TriangulationOptions) error {
 		if eps <= 0 {
-			return fmt.Errorf("WithEps: eps must be positive got %v", eps)
+			return fmt.Errorf("s2delaunay: eps must be positive got %v", eps)
 		}
 		o.Eps = eps
 		return nil
@@ -59,7 +59,7 @@ func WithEps(eps float64) TriangulationOption {
 func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (*Triangulation, error) {
 	if len(vertices) < 4 {
 		return nil,
-			errors.New("NewTriangulation: insufficient vertices for triangulation, minimum 4 required")
+			errors.New("s2delaunay: insufficient vertices for triangulation, minimum 4 required")
 	}
 
 	opts := &TriangulationOptions{
@@ -88,7 +88,7 @@ func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (
 	qh := new(quickhull.QuickHull)
 	ch := qh.ConvexHull(r3vertices, true, true, opts.Eps)
 	if len(ch.Indices) != numTriangles*3 {
-		return nil, errors.New("NewTriangulation: inconsistent number of indices returned from QuickHull")
+		return nil, errors.New("s2delaunay: inconsistent number of indices returned from QuickHull")
 	}
 
 	for _, idx := range ch.Indices {
@@ -123,7 +123,7 @@ func NewTriangulation(vertices s2.PointVector, setters ...TriangulationOption) (
 func (t *Triangulation) IncidentTriangles(vIdx int) []int {
 	if vIdx < 0 || vIdx+1 >= len(t.IncidentTriangleOffsets) {
 		right := len(t.IncidentTriangleOffsets) - 1
-		panic(fmt.Sprintf("IncidentTriangles: vIdx %d out of range [0 %d)", vIdx, right))
+		panic(fmt.Sprintf("s2delaunay: vIdx %d out of range [0 %d)", vIdx, right))
 	}
 	start := t.IncidentTriangleOffsets[vIdx]
 	end := t.IncidentTriangleOffsets[vIdx+1]
@@ -134,7 +134,7 @@ func (t *Triangulation) IncidentTriangles(vIdx int) []int {
 // It panics if the triangle index is out of bounds.
 func (t *Triangulation) TriangleVertices(tIdx int) (s2.Point, s2.Point, s2.Point) {
 	if tIdx < 0 || tIdx >= len(t.Triangles) {
-		panic(fmt.Sprintf("TriangleVertices: tIdx %d out of bounds [0 %d)", tIdx, len(t.Triangles)))
+		panic(fmt.Sprintf("s2delaunay: tIdx %d out of bounds [0 %d)", tIdx, len(t.Triangles)))
 	}
 	tri := t.Triangles[tIdx]
 	return t.Vertices[tri[0]], t.Vertices[tri[1]], t.Vertices[tri[2]]
@@ -175,7 +175,7 @@ func PrevVertex(t [3]int, vIdx int) int {
 	case t[2]:
 		return t[1]
 	}
-	panic(fmt.Sprintf("PrevVertex: vIdx %d not in triangle %v", vIdx, t))
+	panic(fmt.Sprintf("s2delaunay: vIdx %d not in triangle %v", vIdx, t))
 }
 
 // NextVertex returns the next vertex in the triangle relative to the given vertex index.
@@ -189,5 +189,5 @@ func NextVertex(t [3]int, vIdx int) int {
 	case t[2]:
 		return t[0]
 	}
-	panic(fmt.Sprintf("NextVertex: vIdx %d not in triangle %v", vIdx, t))
+	panic(fmt.Sprintf("s2delaunay: vIdx %d not in triangle %v", vIdx, t))
 }
